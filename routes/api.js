@@ -37,9 +37,9 @@ function makePassword(length) {
 function isAuthorValid(author) {
     for (let i = 0; i < authorsLength; i++)
         if (author === authors[i].id) 
-            return true
+            return i
 
-    return false
+    return -1
 }
 
 router.get("/new-session", async (req, res) => { //cambia con post
@@ -57,18 +57,20 @@ router.get("/new-session", async (req, res) => { //cambia con post
     })
 })
 
-router.get("/:sessionId/:writePermissionPassword/new-chat/:authorId", async (req, res) => { //cambia con put
+router.get("/:sessionId/:writePermissionPassword/new-chat/:authorId/:content", async (req, res) => { //cambia con put
     const sessionId = req.params.sessionId
     const authorId = req.params.authorId
-    if (!sessionId || !authorId)
+    const content = req.params.content //cambia con body
+    if (!sessionId || !authorId || !content)
         return res.sendStatus(400)
 
     const writePermissionPassword = req.params.writePermissionPassword
     if (!writePermissionPassword)
         return res.sendStatus(401)
 
-    //l'autore esiste?
-    if (!isAuthorValid(authorId))
+    //l'autore è uno di quelli noti?
+    const authorIndex = isAuthorValid(authorId)
+    if (authorIndex < 0)
         return res.status(400).send("invalid authorId")
     
     //la sessione esiste?
@@ -80,67 +82,39 @@ router.get("/:sessionId/:writePermissionPassword/new-chat/:authorId", async (req
         return res.sendStatus(401)
 
     //la chat è gia stata inizializzata?    
-    const check2 = await db.collection("sessions").doc(sessionId).collection(authorId).limit(1).get()
-    if (!check2.empty)
-        return res.status(400).send("chat already existed")
+    const oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").get()
+    
+    let messages = []
+    const timeBeforeChatGPT = parseInt(Date.now()/1000)
 
-
-    const response = await db.collection("sessions").doc(sessionId).collection(authorId).add({})
-
-    res.send({
-        status: "done",
-        chatId: response.id
-    })
-})
-
-router.get("/:sessionId/:authorId", async (req, res) => { //cambia con put
-    const sessionId = req.params.sessionId
-    const authorId = req.params.authorId
-
-    res.send({
-        chatId: "response.id"
-    })
-})
-
-router.get("/", async (req, res) => {
-    const response = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo-16k",
-        messages: [
+    if (oldChats.empty) { //se è una nuova chat
+        messages = [
             {
                 "role": "system",
-                "content": "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, al massimo 40 o 50 caratteri."
+                "content": authors[authorIndex].systemContent
             },
             {
                 "role": "user",
-                "content": "ciao, qual'è la tua opera più famosa?"
-            },
-            {
-                "role": "assistant",
-                "content": "Ciao! La mia opera più famosa è \"Impression, soleil levant\"."
-            },
-            {
-                "role": "user",
-                "content": "parlami un pò di quest'opera"
-            },
-            {
-                "role": "assistant",
-                "content": "\"Impression, soleil levant\" è un dipinto che ho realizzato nel 1872. Rappresenta un'immagine del porto di Le Havre al tramonto. È un'opera chiave del movimento impressionista, in cui ho cercato di catturare l'effetto fugace della luce e dell'atmosfera."
-            },
-            {
-                "role": "user",
-                "content": "Quanti anni hai?"
-            },
-            {"role":"assistant","content":"Sono nato il 14 novembre 1840, quindi al momento ho 81 anni."},
-            {
-                "role": "user",
-                "content": "Spiegami come viene utilizzata la luce nelle tue opere"
-            },
-            {"role":"assistant","content":"La luce è essenziale nelle mie opere. La utilizzo per catturare gli effetti e le variazioni atmosferiche, creando un senso di movimento e trasformazione. La luce naturale mi ispira e mi permette di dipingere la realtà in modo suggestivo e emozionale."},
-            {
-                "role": "user",
-                "content": "molto interessante! ora vado. ci vediamo in giro. ciao"
-            },
-        ],
+                "content": content
+            }
+        ]
+    } else { // se no riempo messages con i messaggi vecchi
+        oldChats.forEach(doc => {
+            const docData = doc.data()
+            messages.push({
+                role: docData.role,
+                content: docData.content
+            })
+        })
+        messages.push({
+            role: "user",
+            content: content
+        })
+    }
+
+    const response = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo-16k",
+        messages,
         temperature: 1,
         max_tokens: 165,
         top_p: 1,
@@ -148,7 +122,38 @@ router.get("/", async (req, res) => {
         presence_penalty: 0,
     })
 
-    res.send(response["choices"][0])
+    messages.push(response["choices"][0]["message"])
+
+    const batch = db.batch()
+    if (oldChats.empty) { //se è una nuova chat
+        messages.forEach((doc) => {
+            if (doc.role === "assistant")
+                doc.timestamp = parseInt(Date.now()/1000)
+            else
+                doc.timestamp = (doc.role === "system") ? timeBeforeChatGPT - 2 : timeBeforeChatGPT - 1
+            
+            const docRef = db.collection("sessions").doc(sessionId).collection(authorId).doc()
+            batch.set(docRef, doc)
+        })
+    } else {
+        for (let i = messages.length-2; i < messages.length; i++) {
+            const obj = messages[i]
+
+            if (obj.role === "assistant")
+                obj.timestamp = parseInt(Date.now()/1000)
+            else
+                obj.timestamp = timeBeforeChatGPT - 1
+
+            const docRef = db.collection("sessions").doc(sessionId).collection(authorId).doc()
+            batch.set(docRef, obj)
+        }
+    }
+    await batch.commit()
+ 
+    return res.send({
+        status: "done",
+        response: response["choices"][0]["message"]["content"]
+    })
 })
 
 module.exports = router
