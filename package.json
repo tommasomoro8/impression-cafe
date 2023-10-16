@@ -1,0 +1,25 @@
+{
+  "name": "server-ue5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "author": "Tommaso Moro",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.1",
+    "firebase-admin": "^11.11.0",
+    "helmet": "^7.0.0",
+    "openai": "^4.12.1",
+    "querystring": "^0.2.1"
+  }
+}
