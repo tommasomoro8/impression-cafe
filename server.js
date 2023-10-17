@@ -1,3 +1,4 @@
+const path = require('path');
 const cookieParser = require("cookie-parser")
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
@@ -7,6 +8,8 @@ const app = express()
 
 require('dotenv').config()
 const dev = process.env.NODE_ENV === 'development'
+
+const { bucket, getDownloadURL } = require("./services/firebase")
 
 /* routes */
 const api = require('./routes/api')
@@ -19,10 +22,8 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"],
-            imgSrc: ["'self'"],
-            connectSrc: ["'self'"],
-            scriptSrcAttr: ["'unsafe-inline'"]
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            mediaSrc: ["'self'", "https://firebasestorage.googleapis.com"]
         },
     }
 }))
@@ -39,7 +40,24 @@ app.use(secureHttps(dev))
 app.use(cookieParser())
 app.use(removeLastSlash)
 
+app.get("/", (req, res) => {
+    //provvisorio... leva questo e rimetti helmet
+    res.sendFile(path.join(__dirname, 'index.html'))
+})
+
 app.use("/api", api)
+
+app.get("/audio/:sessionId/:audioId", async (req, res) => {
+    const sessionId = req.params.sessionId
+    const audioId = req.params.audioId
+    
+    if (!sessionId || !audioId)
+        return re.sendStatus(400)
+
+    const fileRef = bucket.file(`sessions/${sessionId}/${audioId}`)
+    const downloadURL = await getDownloadURL(fileRef)
+    res.redirect(downloadURL)
+})
 
 app.get("*", (req, res) => {
     res.sendStatus(404)
