@@ -1,8 +1,12 @@
 const fs = require("fs")
+const util = require('util')
 const path = require("path")
 const multer = require("multer")
 const { openai } = require("../services/openai")
 const { db, bucket } = require("../services/firebase")
+const textToSpeech = require('@google-cloud/text-to-speech')
+
+const textToSpeechClient = new textToSpeech.TextToSpeechClient();
 
 const express = require("express")
 const router = express.Router()
@@ -94,6 +98,7 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
     const sessionId = req.params.sessionId
     const authorId = req.params.authorId
     const writePermissionPassword = req.headers["writepermissionpassword"]
+const tempo1 = Date.now()
 
     if (!req.file)
         return res.sendStatus(400)
@@ -132,6 +137,7 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
     } else
         blockedSessions.push(sessionId)
 
+const tempo2 = Date.now()
     let transcription
     try {
         transcription = await openai.audio.transcriptions.create({
@@ -146,7 +152,7 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
     }
 
     const content = transcription.text
-
+const tempo3 = Date.now()
     try {
         bucket.upload(path.join(__dirname, '../audio', req.file.filename), {
             destination: `sessions/${sessionId}/${req.file.filename}`,
@@ -159,13 +165,13 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
     } catch (error) {
         removeFileAudio(req.file.filename)
     }
-
+const tempo4 = Date.now()
     //la chat è gia stata inizializzata?    
     const oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").get()
     
     let messages = []
     const timeBeforeChatGPT = parseInt(Date.now()/1000)
-
+const tempo5 = Date.now()
     if (oldChats.empty) { //se è una nuova chat
         messages = [
             {
@@ -190,11 +196,11 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
             content: content
         })
     }
-
+const tempo6 = Date.now()
     let response
     try {
         response = await openai.chat.completions.create({
-            model: "gpt-3.5-turbo-16k",
+            model: "gpt-3.5-turbo",
             messages,
             temperature: 1,
             max_tokens: 165,
@@ -207,8 +213,10 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
         return res.sendStatus(500)
     }
 
-
+const tempo7 = Date.now()
     messages.push(response["choices"][0]["message"])
+
+    const assistantAudioId = new Date().toISOString() + authorId + ".mp3" //se cambi tipo di file da textToSpeech cambia .mp3 finale
 
     const batch = db.batch()
     if (oldChats.empty) { //se è una nuova chat
@@ -216,6 +224,7 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
             switch (doc.role) {
                 case "assistant":
                     doc.timestamp = parseInt(Date.now()/1000)
+                    doc.audioId = assistantAudioId
                 break
                 case "system":
                     doc.timestamp = timeBeforeChatGPT - 2
@@ -233,8 +242,10 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
         for (let i = messages.length-2; i < messages.length; i++) {
             const obj = messages[i]
 
-            if (obj.role === "assistant")
+            if (obj.role === "assistant") {
                 obj.timestamp = parseInt(Date.now()/1000)
+                obj.audioId = assistantAudioId
+            }
             else {
                 obj.timestamp = timeBeforeChatGPT - 1
                 obj.audioId = req.file.filename
@@ -245,15 +256,67 @@ router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req
         }
     }
     await batch.commit()
- 
+const tempo8 = Date.now()
+
+    let textToSpeechresponse
+
+    try {
+        textToSpeechresponse = await textToSpeechClient.synthesizeSpeech({
+            input: {
+                text: response["choices"][0]["message"]["content"]
+            },
+            voice: {
+                languageCode: "it-IT",
+                name: "it-IT-Neural2-C"
+            },
+            audioConfig: {
+                audioEncoding: 'MP3',
+                pitch: -2.8,
+                speakingRate: 1
+            },
+        })
+    } catch (error) {
+        console.error(error)
+        return res.sendStatus(500)
+    }
+        
+    const writeFile = util.promisify(fs.writeFile)
+    await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
+
+
+const tempo9 = Date.now()
+
+    try {
+        await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
+            destination: `sessions/${sessionId}/${assistantAudioId}`,
+            metadata: {
+                contentType: "audio/mp3"
+            },
+        })
+    } catch (error) {
+        removeFileAudio(assistantAudioId)
+    }
+
+    removeFileAudio(assistantAudioId)
+
+const tempo10 = Date.now()
+
     res.send({
         status: "done",
         audioId: req.file.filename,
         audioTranscription: content,
+        assistantAudioId: assistantAudioId,
         response: response["choices"][0]["message"]["content"]
     })
 
     blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
+
+    console.log("check di permessi, sessione e password", tempo2 - tempo1)
+    console.log("speech to text", tempo3 - tempo2)
+    console.log("chat gpt", tempo7 - tempo6)
+    console.log("salva risposte su database", tempo8 - tempo7)
+    console.log("text to speech", tempo9 - tempo8)
+    console.log("tempotot", tempo10 - tempo1)
 })
 
 
