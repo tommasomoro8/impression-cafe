@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('path')
 const cookieParser = require("cookie-parser")
 const helmet = require('helmet')
 const rateLimit = require('express-rate-limit')
@@ -6,13 +6,18 @@ const rateLimit = require('express-rate-limit')
 const express = require("express")
 const app = express()
 
+const http = require("http")
+const server = http.createServer(app)
+const { Server } = require("socket.io")
+const io = new Server(server)
+
 require('dotenv').config()
 const dev = process.env.NODE_ENV === 'development'
 
 /* routes */
-const api = require('./routes/api')
+const api = require('./routes/api')(io)
 const audio = require('./routes/audio')
-const chat = require('./routes/chat')
+const chat = require('./routes/chat')(io)
 
 /* middleware */
 const secureHttps = require("./middleware/secureHttps")
@@ -22,7 +27,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.socket.io"],
             mediaSrc: ["'self'", "https://firebasestorage.googleapis.com"]
         },
     }
@@ -60,6 +65,6 @@ app.use((err, req, res, next) => {
 })
 
 const port = process.env.PORT || 3000
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`listening on port ${port} in ${process.env.NODE_ENV} mode...`)
 })
