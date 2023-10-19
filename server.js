@@ -9,10 +9,10 @@ const app = express()
 require('dotenv').config()
 const dev = process.env.NODE_ENV === 'development'
 
-const { bucket, getDownloadURL } = require("./services/firebase")
-
 /* routes */
 const api = require('./routes/api')
+const audio = require('./routes/audio')
+const chat = require('./routes/chat')
 
 /* middleware */
 const secureHttps = require("./middleware/secureHttps")
@@ -40,24 +40,15 @@ app.use(secureHttps(dev))
 app.use(cookieParser())
 app.use(removeLastSlash)
 
-app.get("/", (req, res) => {
-    //provvisorio... leva questo e rimetti helmet
-    res.sendFile(path.join(__dirname, 'index.html'))
+app.use("/", express.static('./static'))
+
+app.get("/ue5-client", (req, res) => { //provvisorio
+    res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
 })
 
 app.use("/api", api)
-
-app.get("/audio/:sessionId/:audioId", async (req, res) => {
-    const sessionId = req.params.sessionId
-    const audioId = req.params.audioId
-    
-    if (!sessionId || !audioId)
-        return re.sendStatus(400)
-
-    const fileRef = bucket.file(`sessions/${sessionId}/${audioId}`)
-    const downloadURL = await getDownloadURL(fileRef)
-    res.redirect(downloadURL)
-})
+app.use("/audio", audio)
+app.use("/chat", chat)
 
 app.get("*", (req, res) => {
     res.sendStatus(404)

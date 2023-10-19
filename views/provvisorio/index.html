@@ -27,9 +27,9 @@
     </div>
 
     <script>
-        const sessionId = "wjXEgyKnX0tLT4gURcXB"
+        const sessionId = "6KdZpREDAReP4phtCsMt"
         const authorId = "chat-monet"
-        const writePermissionPassword = "JcBgBs6xPe9lmIvwAyfG2wQ5V9fpif"
+        const writePermissionPassword = "OHTnJjsdxeNT7SPsI9pgrKuaqEpFCE"
 
         let mediaRecorder
         let audioChunks = []
@@ -136,6 +136,8 @@
             document.getElementById("chat-monet").append(botAudio)
 
             botAudioElement.play()
+
+            document.getElementById("chat-monet").scrollTo(0, document.getElementById("chat-monet").scrollHeight);
 
             document.getElementById("action").innerText = "Start recording"
             document.getElementById("action").className = "start-recording"
