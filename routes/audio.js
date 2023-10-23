@@ -11,9 +11,11 @@ router.get("/:sessionId/:audioId", async (req, res) => {
         return res.sendStatus(400)
 
     const fileRef = bucket.file(`sessions/${sessionId}/${audioId}`)
-    const downloadURL = await getDownloadURL(fileRef)
-
-    res.redirect(downloadURL)
+    try {
+        res.redirect(await getDownloadURL(fileRef))
+    } catch (error) {
+        res.sendStatus(error.code)
+    }
 })
 
 module.exports = router

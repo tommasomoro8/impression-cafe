@@ -10,16 +10,25 @@ router.get("/:sessionId", async (req, res) => {
     if (!sessionId)
         return res.sendStatus(400)
 
+    let sessionTest
+    try {
+        sessionTest = await db.collection("sessions").doc(sessionId).get()
+    } catch (error) {
+        return res.send(500)
+    }
+
+    if (!sessionTest.exists)
+        return res.status(400).send("the session does not exist")
+
+    const sessionCreationTimestamp = sessionTest.data().timestamp
+
+
     let sessionDoc 
     try {
         sessionDoc = await db.collection("sessions").doc(sessionId).listCollections()
     } catch (error) {
         return res.send(500)
     }
-  
-    if (!sessionDoc.length)
-        return res.status(400).send("the session does not exist")
-
 
     const chats = {}
 
@@ -30,13 +39,15 @@ router.get("/:sessionId", async (req, res) => {
         const authorChat = await sessionDoc[i].orderBy("timestamp", "asc").get()
         authorChat.forEach(doc => {
             const obj = doc.data()
-            obj.id = doc.id
-
-            chats[authorId].push(obj)
+            
+            if (obj.role !== "system") {
+                obj.id = doc.id
+                chats[authorId].push(obj)
+            }
         })
     }
 
-    res.send(chatPage(sessionId, chats))
+    res.send(chatPage(sessionId, chats, sessionCreationTimestamp))
 })
 
 module.exports = io => {
