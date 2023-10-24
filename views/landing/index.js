@@ -11,21 +11,25 @@ module.exports = () => {
     <link rel="icon" type="image/x-icon" href="/logo/small-rounded.png">
     <title>ImpressionCafé</title>
 </head>
-<body>https://www.youtube.com/watch?v=TX9qSaGXFyg&t=15s
+<body>
     <div id="container">
         <div id="left-container">
-            <!--div id="left-container-text">Parla con monet</div-->
-            <img id="img-bg" src="/landing/artworks/0.jpeg"/>
+            <video autoplay muted>
+                <source src="/landing/video/test.mp4" type="video/mp4">
+            </video>
         </div>
         <div id="right-container">
             <div id="title-logo">
                 <div id="title">ImpressionCafé</div>
             </div>
             <div id="actions">
-                <div id="right-container-text">Inizia ora</div>
-                <div id="chat-now" class="img0">Nuova chat</div>
-                <div id="view-chat" class="img0">
-                    <span id="view-chat-text" class="img0">Assisti a una chat</span>
+                <!--div id="right-container-text">Inizia ora</div-->
+                <div id="right-container-desc">
+                    Conosci gli autori impressionisti del Ottocento. Inizia subito creando una nuova chat o accendendo a una creata in precedenza!
+                </div>
+                <div id="chat-now">Nuova chat</div>
+                <div id="view-chat">
+                    <span id="view-chat-text">Assisti a una chat</span>
                 </div>
             </div>
         </div>
@@ -38,3 +42,5 @@ module.exports = () => {
 </html>
     `
 }
+
+// riaggiungi loop su video

@@ -13,6 +13,8 @@ body {
     background-color: #141414;
 }
 
+/* LEFT container */
+
 #left-container {
     width: 65vw;
     height: 100vh;
@@ -26,47 +28,18 @@ body {
     position: relative;
 }
 
-@keyframes imgscale {
-    0%   {scale: 1;}
-    100% {scale: 1.1;}
-}
-
-@keyframes idle {
-    100% {scale: 1;}
-}
-
-#img-bg {
-    width: 65vw;
-    height: 100vh;
-    object-fit: cover;
-
-    scale: 1;
-    /* animation: imgscale 3s linear forwards; */
-    transition: filter 1000ms linear, opacity 1000ms linear;
-
-    filter: blur(0px);
-    opacity: 100;
-}
-
-#img-bg.changing {
-    filter: blur(10px);
-    opacity: 100;
-}
-
-
-
-#left-container-text {
+video {
     position: absolute;
-    top: 50%;
-    transform: translate(0, -50%);
-    left: 5vw;
-    color: rgb(255, 255, 255);
-    font-weight: bold;
-    font-size: 3vw;
-    z-index: 10;
-
+    top: 0;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
+
+/* RIGHT container */
 
 #right-container {
     width: 35vw;
@@ -78,6 +51,8 @@ body {
 
     flex-direction: column;
 }
+
+    /* top */
 
 #title-logo {
     display: flex;
@@ -93,18 +68,24 @@ body {
     font-size: 41.15px;
 }
 
-#logo {
-    width: 60px;
-    height: 60px;
-    border-radius: 8px;
-}
 
+
+    /* bottom */
+
+#actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: column;
+
+}
 
 #right-container-text {
     color: #dcdcdc;
     font-weight: bold;
     font-size: 28px;
-    align-self: flex-start;
+    align-self: center;
 }
 
 #chat-now {
@@ -126,7 +107,7 @@ body {
     margin-top: 20px;
     margin-bottom: 20px;
 
-    transition: background-image 2s cubic-bezier(0.075, 0.82, 0.165, 1);
+    background-image: -webkit-linear-gradient(-45deg, #033E8C, #03588C, #03738C);
 }
 
 #view-chat {
@@ -144,7 +125,7 @@ body {
     font-weight: bold;
     font-size: 20px;
 
-    transition: background-color 2s cubic-bezier(0.075, 0.82, 0.165, 1);
+    background-color: rgb(30, 30, 37);
 }
 
 #view-chat-text {
@@ -152,40 +133,7 @@ body {
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
 
-    transition: -webkit-linear-gradient 2s cubic-bezier(0.075, 0.82, 0.165, 1);
-}
-
-@property --myColor1 {
-    syntax: '<color>';
-    initial-value: rgb(80, 160, 80);
-    inherits: false;
-}
-
-@property --myColor2 {
-    syntax: '<color>';
-    initial-value: rgb(40, 190, 145);
-    inherits: false;
-}
-
-/* img 2 */
-#chat-now.img2 {
     background-image: -webkit-linear-gradient(-45deg, #033E8C, #03588C, #03738C);
-}
-#view-chat.img2 {
-    /* background-color: rgb(151, 5, 0); */
-    background-color: rgb(30, 30, 37);
-}
-#view-chat-text.img2 {
-    background: -webkit-linear-gradient(-45deg, #033E8C, #03588C, #03738C);
-}
 
-/* img 3 */
-#chat-now.img3 {
-    background-image: -webkit-linear-gradient(-45deg, #9FB0BF, #9FB0BF, #D9704A);
-}
-#view-chat.img3 {
-    background-color: rgb(30, 30, 37);
-}
-#view-chat-text.img3 {
-    background: -webkit-linear-gradient(-45deg, #9FB0BF, #D9704A);
+    /*filter: drop-shadow(2px 2px #ffffff26);*/
 }
