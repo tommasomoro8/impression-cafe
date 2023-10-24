@@ -16,11 +16,11 @@ function changeImg(num) {
     }, 1000)
 }
 
-changeImg(0)
-let i = 1
-setInterval(() => {
-    if (i >= 3)
-        i = 0
-    changeImg(i)
-    i++
-}, 3000)
+changeImg(2)
+// let i = 1
+// setInterval(() => {
+//     if (i >= 3)
+//         i = 0
+//     changeImg(i)
+//     i++
+// }, 3000)

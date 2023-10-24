@@ -74,9 +74,37 @@ body {
 
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content:space-evenly;
 
     flex-direction: column;
+}
+
+#title-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-direction: row;
+}
+
+#title {
+    color: #e8e8e8;
+    font-weight: bold;
+    font-size: 41.15px;
+}
+
+#logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+}
+
+
+#right-container-text {
+    color: #dcdcdc;
+    font-weight: bold;
+    font-size: 28px;
+    align-self: flex-start;
 }
 
 #chat-now {
@@ -95,6 +123,7 @@ body {
     font-weight: bold;
     font-size: 20px;
 
+    margin-top: 20px;
     margin-bottom: 20px;
 
     transition: background-image 2s cubic-bezier(0.075, 0.82, 0.165, 1);

@@ -8,7 +8,8 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/base.css">
     <link rel="stylesheet" type="text/css" href="/chat/style.css">
-    <title>Live chat ✨</title>
+    <link rel="icon" type="image/x-icon" href="/logo/small-rounded.png">
+    <title>ImpressionCafé - Live chat</title>
 </head>
 <body>
     <div id="container">
