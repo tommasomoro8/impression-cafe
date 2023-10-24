@@ -23,6 +23,9 @@ const chat = require('./routes/chat')(io)
 const secureHttps = require("./middleware/secureHttps")
 const removeLastSlash = require("./middleware/removeLastSlash")
 
+/* pages */
+const landingPage = require("./views/landing")
+
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -51,6 +54,11 @@ app.get("/ue5-client", (req, res) => { //provvisorio
     res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
 })
 
+
+app.get("/", (req, res) => {
+    res.setHeader("Content-Type", "text/html")
+    res.send(landingPage())
+})
 app.use("/api", api)
 app.use("/audio", audio)
 app.use("/chat", chat)

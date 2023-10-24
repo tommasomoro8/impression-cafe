@@ -188,15 +188,12 @@ function displayTimeDifference(chatAuthor, chatButtonPreview) {
 }
 
 function rearrangeChatList() {
-    console.log("chiamata")
-
+    
     chatAuthors.sort((a, b) => {
         if (a.lastMessageTimestamp < b.lastMessageTimestamp) return 1
         if (a.lastMessageTimestamp > b.lastMessageTimestamp) return -1
         return 0
     })
-
-    console.log(chatAuthors)
 
     for (let i = 0; i < chatAuthors.length; i++) {
         chatAuthors[i].button.style.transform = `translate(0, ${i*80}px)`

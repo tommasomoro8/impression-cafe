@@ -46,7 +46,8 @@ router.get("/:sessionId", async (req, res) => {
             }
         })
     }
-
+    
+    res.setHeader("Content-Type", "text/html")
     res.send(chatPage(sessionId, chats, sessionCreationTimestamp))
 })
 
