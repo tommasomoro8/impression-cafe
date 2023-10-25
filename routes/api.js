@@ -61,7 +61,7 @@ router.post("/new-session", async (req, res) => {
 
     res.send({
         status: "done",
-        sessionsId: response.id,
+        sessionId: response.id,
         writePermissionPassword
     })
 })

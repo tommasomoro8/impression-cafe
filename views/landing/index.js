@@ -22,17 +22,19 @@ module.exports = () => {
             <div id="title-logo">
                 <div id="title">ImpressionCafé</div>
             </div>
-            <div id="actions">
-                <!--div id="right-container-text">Inizia ora</div-->
-                <div id="right-container-desc">
-                    Conosci gli autori impressionisti del Ottocento. Inizia subito creando una nuova chat o accendendo a una creata in precedenza!
-                </div>
+            <div id="actions-top">
                 <div id="chat-now">Nuova chat</div>
                 <div id="view-chat">
                     <span id="view-chat-text">Assisti a una chat</span>
                 </div>
             </div>
+            <div id="actions-bottom">
+                <div id="recognitions">Riconoscimenti</div>
+                &nbsp|&nbsp
+                <div id="disclaimer">Disclaimer</div>
+            </div>
         </div>
+        <div id="right-hidden-container"></div>
     </div>
 
     <div class="hidden" id="url">${process.env.URL}</div>
