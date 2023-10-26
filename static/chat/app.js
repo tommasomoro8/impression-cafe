@@ -188,7 +188,6 @@ function displayTimeDifference(chatAuthor, chatButtonPreview) {
 }
 
 function rearrangeChatList() {
-    
     chatAuthors.sort((a, b) => {
         if (a.lastMessageTimestamp < b.lastMessageTimestamp) return 1
         if (a.lastMessageTimestamp > b.lastMessageTimestamp) return -1
@@ -210,3 +209,5 @@ function rearrangeChatList() {
 
 if (!firstCall)
     rearrangeChatList()
+
+chatAuthors[0].button.click()

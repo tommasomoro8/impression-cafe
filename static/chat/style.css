@@ -52,6 +52,7 @@ body {
 
 .chat-button {
     cursor: pointer;
+    background-color: #141414;
 
     width: 100%;
     height: 80px;
@@ -63,7 +64,11 @@ body {
 
     position: absolute;
 
-    transition: transform 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+    transition: transform 1s cubic-bezier(0.76, 0.59, 0, 1);
+}
+
+.chat-button.no-animation {
+    transition: none;
 }
 
 .chat-button.active {

@@ -24,22 +24,44 @@ document.getElementById("chat-now").addEventListener("click", () => {
 })
 
 async function openNewChatSection() {
-    // let result = await fetch("/api/new-session", { method: 'POST' })
-
-    // if (result.status !== 200)
-    //     return console.error("openNewChatSection post error")
-
-    // result = await result.json()
-
-    let result = {
-        sessionId: "WFv2BSSiTIwwfQDY7D2p",
-    }
+    document.getElementById("session-info-time").innerText = ((new Date()).toLocaleDateString('it', { weekday:"short", year:"numeric", month:"short", day:"numeric"})).toUpperCase()
 
     document.getElementById("right-hidden-container").classList.add("newchat")
     document.getElementById("left-container").classList.add("newchat")
     document.getElementById("right-container").classList.add("newchat")
 
-    setTimeout(() => window.location.href = "/chat/" + result.sessionId, 1000)
+    document.getElementById("title-logo").classList.add("newchat")
+    document.getElementById("actions-bottom").classList.add("newchat")
+    document.getElementById("actions-top").classList.add("newchat")
+    setTimeout(() => {
+        document.getElementById("show").style.display = "none"
+        document.getElementById("show-later").style.display = "flex"
+
+        setTimeout(() => {
+            document.getElementById("show-later").classList.add("show")
+        }, 50)
+    }, 700)
+
+    const dateBeforeApiCall = Date.now()
+
+    let result = await fetch("/api/new-session", { method: 'POST' })
+
+    if (result.status !== 200)
+        return console.error("openNewChatSection post error")
+
+    result = await result.json()
+
+    document.getElementById("session-info-id").innerText = result.sessionId
+
+    // let result = {
+    //     sessionId: "DZJIg8i74j2QIsHLpQ7P",
+    // }
+
+    const dateAfterApiCall = Date.now()
+    
+    setTimeout(() => 
+        window.location.href = "/chat/" + result.sessionId,
+    1000 - (dateAfterApiCall - dateBeforeApiCall))
 }
 
 window.addEventListener("pageshow", (event) => {
@@ -49,6 +71,17 @@ window.addEventListener("pageshow", (event) => {
         document.getElementById("right-hidden-container").classList.remove("newchat")
         document.getElementById("left-container").classList.remove("newchat")
         document.getElementById("right-container").classList.remove("newchat")
+
+        document.getElementById("show-later").classList.remove("show")
+        document.getElementById("show").style.display = ""
+        document.getElementById("show-later").style.display = "none"
+
+        setTimeout(() => {
+            document.getElementById("title-logo").classList.remove("newchat")
+            document.getElementById("actions-bottom").classList.remove("newchat")
+            document.getElementById("actions-top").classList.remove("newchat")
+        }, 300)
+
         clicked = false
     }
 })
