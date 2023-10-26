@@ -30,9 +30,7 @@ module.exports = () => {
                     </div>
                 </div>
                 <div id="actions-bottom">
-                    <div id="recognitions">Riconoscimenti</div>
-                    &nbsp|&nbsp
-                    <div id="disclaimer">Disclaimer</div>
+                    Riconoscimenti e Avvertenze
                 </div>
             </span>
             <span id="show-later">

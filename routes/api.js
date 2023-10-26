@@ -64,6 +64,10 @@ router.post("/new-session", async (req, res) => {
         sessionId: response.id,
         writePermissionPassword
     })
+
+    db.collection("check-empty-sessions").doc(response.id).set({
+        checkAfter: parseInt(Date.now()/1000) + 3600 // 1h dopo
+    })
 })
 
 const blockedSessions = []
@@ -150,6 +154,7 @@ module.exports = io => {
         } catch (error) {
             console.log(error)
             removeFileAudio(req.file.filename)
+            blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
             return res.sendStatus(500)
         }
     
@@ -222,6 +227,7 @@ module.exports = io => {
             })
         } catch (error) {
             console.error(error)
+            blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
             return res.sendStatus(500)
         }
     
@@ -289,6 +295,7 @@ module.exports = io => {
             })
         } catch (error) {
             console.error(error)
+            blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
             return res.sendStatus(500)
         }
             

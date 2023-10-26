@@ -109,15 +109,9 @@ video {
     color: rgb(30, 30, 37);
 
     transition: height 1s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.4s cubic-bezier(0.18, 1.09, 0.83, 1.01);
-}
 
-#recognitions {
     cursor: pointer;
 }
-#disclaimer {
-    cursor: pointer;
-}
-
 
 #chat-now {
     width: 300px;
@@ -139,6 +133,8 @@ video {
     margin-bottom: 20px;
 
     background-image: -webkit-linear-gradient(-45deg, #033E8C, #03588C, #03738C);
+
+    transition: transform .2s linear;
 }
 
 #view-chat {
@@ -157,6 +153,17 @@ video {
     font-size: 20px;
 
     background-color: rgb(30, 30, 37);
+
+    overflow: hidden;
+
+    transition: transform .2s linear;
+}
+
+#chat-now:hover {
+    transform: scale(1.015);
+}
+#view-chat:hover {
+    transform: scale(1.01);
 }
 
 #view-chat-text {
@@ -166,7 +173,7 @@ video {
 
     background-image: -webkit-linear-gradient(-45deg, #033E8C, #03588C, #03738C);
 
-    /*filter: drop-shadow(2px 2px #ffffff26);*/
+    filter: drop-shadow(0px 0px 40px #ffffff);
 }
 
 /* nuova chat */

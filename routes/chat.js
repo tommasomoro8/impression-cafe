@@ -60,7 +60,7 @@ module.exports = io => {
     
         const sessionDoc = await db.collection("sessions").doc(sessionId).get()
         if (!sessionDoc.exists)
-            return res.status(400).send("invalid sessionId")
+            return socket.disconnect()
         
         socket.join(sessionId)
     
