@@ -30,7 +30,33 @@ module.exports = () => {
                     </div>
                 </div>
                 <div id="actions-bottom">
-                    Riconoscimenti e Avvertenze
+                    <div id="actions-bottom-text">
+                        Crediti e Avvertenze
+                    </div>
+
+                    <div id="actions-bottom-scroll-view">
+
+                        <div class="actions-bottom-title">
+                            Crediti
+                        </div>
+
+                        <div class="actions-bottom-paragraph">
+                        ImpressionCafé nasce da due studenti del liceo <span onclick="openLink('https://liceoduca.edu.it/')" class="paragraph-link">Duca Degli Abruzzi</span>, <span onclick="openLink('https://github.com/tommasomoro8')" class="paragraph-link">Tommaso Moro</span> e <span onclick="openLink('https://github.com/ivanlomaka')" class="paragraph-link">Ivan Lomaka.</span><br>
+                        Un importante riconoscimento va ai docenti, in particolare alla professoressa Cristina Tranchese, che ha seguito i due ragazzi nella realizzazione del progetto.
+                        Testo da sistemare
+                        </div>
+
+                        <div class="actions-bottom-title">
+                            Avvertenze
+                        </div>
+
+                        <div class="actions-bottom-paragraph">
+
+                        Le registrazioni audio e i dialoghi vengono salvati in database con sede europea gestiti da Google LLC.
+
+                        Il progetto Testo da sistemare
+                        </div>
+                    </div>
                 </div>
             </span>
             <span id="show-later">
