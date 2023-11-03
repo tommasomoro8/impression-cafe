@@ -128,10 +128,10 @@ function openCredists(open = true) {
 
         document.getElementById("actions-bottom-scroll-view").classList.remove("open-credits")
 
-        // setTimeout(() => {
-        //     document.getElementById("title-logo").style.transition = "height 1s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.4s cubic-bezier(0.18, 1.09, 0.83, 1.01)"
-        //     document.getElementById("actions-top").style.transition = "height 1s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.4s cubic-bezier(0.18, 1.09, 0.83, 1.01)"
-        // }, 200)
+        setTimeout(() => {
+            document.getElementById("title-logo").style.transition = "height 1s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.4s cubic-bezier(0.18, 1.09, 0.83, 1.01)"
+            document.getElementById("actions-top").style.transition = "height 1s cubic-bezier(0.075, 0.82, 0.165, 1), opacity 0.4s cubic-bezier(0.18, 1.09, 0.83, 1.01)"
+        }, 200)
     }
 }
 

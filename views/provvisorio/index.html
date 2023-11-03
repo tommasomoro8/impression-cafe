@@ -28,9 +28,9 @@
     </div>
 
     <script>
-        let sessionId = "R1NvxOOv7sw8jdScmvU4"
-        let authorId = "chat-seurat"
-        let writePermissionPassword = "IMpG4PfM7VPeI1PppUwJzH2crujrNd"
+        let sessionId = "C7VjmYhkfJdgCtcgKXVS"
+        let writePermissionPassword = "VBswtZady8fT7rVxIXXaQqwjJYiac5"
+        let authorId = "chat-monet"
 
         let mediaRecorder
         let audioChunks = []
@@ -93,50 +93,51 @@
             const myHeaders = new Headers();
             myHeaders.append("writepermissionpassword", writePermissionPassword)
         
-            const result = await fetch("http://localhost:3000/api/" + sessionId + "/new-chat/" + authorId, {
+            let result  = await fetch("http://localhost:3000/api/" + sessionId + "/new-chat/" + authorId, {
                 method: 'post',
                 headers: myHeaders,
                 body: formData,
                 redirect: 'follow'
             })
+            
     
             console.log(result)
             const responsejson = await result.json()
             console.log(responsejson)
 
-            const userResponse = document.createElement("div")
-            userResponse.className = "message user-message"
-            userResponse.innerText = responsejson.audioTranscription
-            document.getElementById("chat-monet").append(userResponse)
+            // const userResponse = document.createElement("div")
+            // userResponse.className = "message user-message"
+            // userResponse.innerText = responsejson.audioTranscription
+            // document.getElementById("chat-monet").append(userResponse)
 
-            const userAudio = document.createElement("div")
-            userAudio.className = "message user-audio"
-                const userAudioElement = document.createElement("audio")
-                userAudioElement.controls = true
-                    const userAudioSourceElement = document.createElement("source")
-                    userAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.audioId
-                    userAudioSourceElement.type = "audio/wav"
-                    userAudioElement.append(userAudioSourceElement)
-                userAudio.append(userAudioElement)
-            document.getElementById("chat-monet").append(userAudio)
+            // const userAudio = document.createElement("div")
+            // userAudio.className = "message user-audio"
+            //     const userAudioElement = document.createElement("audio")
+            //     userAudioElement.controls = true
+            //         const userAudioSourceElement = document.createElement("source")
+            //         userAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.audioId
+            //         userAudioSourceElement.type = "audio/wav"
+            //         userAudioElement.append(userAudioSourceElement)
+            //     userAudio.append(userAudioElement)
+            // document.getElementById("chat-monet").append(userAudio)
 
-            const botResponse = document.createElement("div")
-            botResponse.className = "message bot-message"
-            botResponse.innerText = responsejson.response
-            document.getElementById("chat-monet").append(botResponse)
+            // const botResponse = document.createElement("div")
+            // botResponse.className = "message bot-message"
+            // botResponse.innerText = responsejson.response
+            // document.getElementById("chat-monet").append(botResponse)
 
-            const botAudio = document.createElement("div")
-            botAudio.className = "message bot-audio"
-                const botAudioElement = document.createElement("audio")
-                botAudioElement.controls = true
-                    const botAudioSourceElement = document.createElement("source")
-                    botAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.assistantAudioId
-                    botAudioSourceElement.type = "audio/wav"
-                    botAudioElement.append(botAudioSourceElement)
-                    botAudio.append(botAudioElement)
-            document.getElementById("chat-monet").append(botAudio)
+            // const botAudio = document.createElement("div")
+            // botAudio.className = "message bot-audio"
+            //     const botAudioElement = document.createElement("audio")
+            //     botAudioElement.controls = true
+            //         const botAudioSourceElement = document.createElement("source")
+            //         botAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.assistantAudioId
+            //         botAudioSourceElement.type = "audio/wav"
+            //         botAudioElement.append(botAudioSourceElement)
+            //         botAudio.append(botAudioElement)
+            // document.getElementById("chat-monet").append(botAudio)
 
-            botAudioElement.play()
+            // botAudioElement.play()
 
             document.getElementById("chat-monet").scrollTo(0, document.getElementById("chat-monet").scrollHeight);
 

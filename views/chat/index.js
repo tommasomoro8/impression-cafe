@@ -12,6 +12,7 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp) => {
     <title>ImpressionCafé - Live chat</title>
 </head>
 <body>
+    <div id="stop-recording-audio-input"></div>
     <div id="container">
         <div id="left-container">
             <div id="left-container-top">
@@ -59,6 +60,11 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp) => {
             <div class="chat-container active" id="chat-monet"></div>
             <div class="chat-container" id="chat-degas"></div>
             <div class="chat-container" id="chat-seurat"></div>
+
+            <div id="chat-container-input">
+                <input type="text" id="text-input"/>
+                <div id="input-action">mic</div>
+            </div>
         </div>
     </div>
 

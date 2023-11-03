@@ -55,7 +55,6 @@ app.get("/ue5-client", (req, res) => { //provvisorio
     res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
 })
 
-
 app.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html")
     res.send(landingPage())

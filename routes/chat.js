@@ -7,48 +7,48 @@ const router = express.Router()
 router.get("/:sessionId", async (req, res) => {
     const sessionId = req.params.sessionId
     
-    if (!sessionId)
-        return res.sendStatus(400)
+    // if (!sessionId)
+    //     return res.sendStatus(400)
 
-    let sessionTest
-    try {
-        sessionTest = await db.collection("sessions").doc(sessionId).get()
-    } catch (error) {
-        return res.send(500)
-    }
+    // let sessionTest
+    // try {
+    //     sessionTest = await db.collection("sessions").doc(sessionId).get()
+    // } catch (error) {
+    //     return res.send(500)
+    // }
 
-    if (!sessionTest.exists)
-        return res.status(400).send("the session does not exist")
+    // if (!sessionTest.exists)
+    //     return res.status(400).send("the session does not exist")
 
-    const sessionCreationTimestamp = sessionTest.data().timestamp
+    // const sessionCreationTimestamp = sessionTest.data().timestamp
 
 
-    let sessionDoc 
-    try {
-        sessionDoc = await db.collection("sessions").doc(sessionId).listCollections()
-    } catch (error) {
-        return res.send(500)
-    }
+    // let sessionDoc 
+    // try {
+    //     sessionDoc = await db.collection("sessions").doc(sessionId).listCollections()
+    // } catch (error) {
+    //     return res.send(500)
+    // }
 
     const chats = {}
 
-    for (let i = 0; i < sessionDoc.length; i++) {
-        const authorId = sessionDoc[i].id
-        chats[authorId] = []
+    // for (let i = 0; i < sessionDoc.length; i++) {
+    //     const authorId = sessionDoc[i].id
+    //     chats[authorId] = []
 
-        const authorChat = await sessionDoc[i].orderBy("timestamp", "asc").get()
-        authorChat.forEach(doc => {
-            const obj = doc.data()
+    //     const authorChat = await sessionDoc[i].orderBy("timestamp", "asc").get()
+    //     authorChat.forEach(doc => {
+    //         const obj = doc.data()
             
-            if (obj.role !== "system") {
-                obj.id = doc.id
-                chats[authorId].push(obj)
-            }
-        })
-    }
+    //         if (obj.role !== "system") {
+    //             obj.id = doc.id
+    //             chats[authorId].push(obj)
+    //         }
+    //     })
+    // }
     
     res.setHeader("Content-Type", "text/html")
-    res.send(chatPage(sessionId, chats, sessionCreationTimestamp))
+    res.send(chatPage(sessionId, chats, "sessionCreationTimestamp"))
 })
 
 module.exports = io => {

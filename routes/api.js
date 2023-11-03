@@ -17,18 +17,17 @@ const authors = [
     {
         id: "chat-monet",
         name: "Claude Monet",
-        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, al massimo 40 o 50 caratteri."
-
+        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando nella risposta in totale al massimo 400 o 500 caratteri."
     },
     {
         id: "chat-seurat",
         name: "Georges Seurat",
-        systemContent: "Devi fare finta di essere Georges Seurat. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, al massimo 40 o 50 caratteri."
+        systemContent: "Devi fare finta di essere Georges Seurat. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-degas",
         name: "Edgar Degas",
-        systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, al massimo 40 o 50 caratteri."
+        systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri.."
     }
 ]
 const authorsLength = authors.length
@@ -50,6 +49,53 @@ function isAuthorValid(author) {
 
     return -1
 }
+
+
+router.get("/test", async (req, res) => {
+//     const sessionId = "C7VjmYhkfJdgCtcgKXVS"
+//     textToSpeechClient.synthesizeSpeech({
+//         input: {
+//             text: "Durante la mia vita ho avuto l'opportunità di vivere in diversi luoghi, ma ci sono tre luoghi rilevanti che vorrei menzionare. \n\nIl primo è Le Havre, la città portuale della Normandia dove sono nato nel 1840. Questo luogo ha lasciato un'impronta importante sulla mia infanzia e ha influenzato la mia passione per il mare e il suo paesaggio. Il secondo luogo significativo è Parigi, la città delle arti e degli artisti."
+//         },
+//         voice: {
+//             languageCode: "it-IT",
+//             name: "it-IT-Neural2-C"
+//         },
+//         audioConfig: {
+//             audioEncoding: 'MP3',
+//             pitch: -2.8,
+//             speakingRate: 1
+//         },
+//     }).then(async (textToSpeechresponse) => {
+//         const assistantAudioId = new Date().toISOString() + "sfgewtajhsrtfdgj" + ".mp3"
+
+//         const writeFile = util.promisify(fs.writeFile)
+//         await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
+    
+        
+//         try {
+//             await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
+//                 destination: `sessions/${sessionId}/${assistantAudioId}`,
+//                 metadata: {
+//                     contentType: "audio/mp3"
+//                 },
+//             })
+//         } catch (error) {
+//             removeFileAudio(assistantAudioId)
+//         }
+
+//         removeFileAudio(assistantAudioId)
+
+//         res.redirect(`http://localhost:3000/audio/${sessionId}/${assistantAudioId}`)
+
+        
+//     }).catch((error) => {
+//         console.error(error)
+//         return res.sendStatus(500)
+//     })
+})
+
+
 
 router.post("/new-session", async (req, res) => {
     const writePermissionPassword = makePassword(30)
@@ -85,6 +131,9 @@ const upload = multer({
         fileSize: 25000000
     },
     fileFilter: (req, file, cb) => {
+        if (req.query["input"] === "text")
+            return cb(null, false)
+
         if (file.mimetype.split("/")[0] !== "audio")
             return cb(new Error(`${file.mimetype.split("/")[0]} type file not allowed - 400`), false)
     
@@ -92,10 +141,13 @@ const upload = multer({
     }
 })
 
-function removeFileAudio(filename) {
+function removeFileAudio(filename, inputText) {
+    if (inputText)
+        return
+
     fs.unlink(path.join(__dirname, '../audio', filename), (err) => {
         if (err)
-          console.error('Error deleting file:', err)
+            console.error('Error deleting file:', err)
     })
 }
 
@@ -104,91 +156,105 @@ module.exports = io => {
         const sessionId = req.params.sessionId
         const authorId = req.params.authorId
         const writePermissionPassword = req.headers["writepermissionpassword"]
-    const tempo1 = Date.now()
-    
-        if (!req.file)
-            return res.sendStatus(400)
+
+        const inputText = req.query["input"] === "text"
+        const inputTextContent = req.body.inputText
+        
+    // --- authentication level ---
+
+        if (!inputText && !req.file)
+            return res.status(400).send("missing file")
+        else if (inputText && !inputTextContent)
+            return res.status(400).send("missing inputTextContent")
         
         if (!sessionId || !authorId) {
-            removeFileAudio(req.file.filename)
-            return res.sendStatus(400)
+            removeFileAudio(req.file.filename, inputText)
+            return res.status(400).send("missing sessionId or authorId")
         }
         if (!writePermissionPassword) {
-            removeFileAudio(req.file.filename)
-            return res.sendStatus(401)
+            removeFileAudio(req.file.filename, inputText)
+            return res.status(401).send("missing password")
         }
     
         //l'autore è uno di quelli noti?
         const authorIndex = isAuthorValid(authorId)
         if (authorIndex < 0) {
-            removeFileAudio(req.file.filename)
+            removeFileAudio(req.file.filename, inputText)
             return res.status(400).send("invalid authorId")
         }
         
         //la sessione esiste?
         const check1 = await db.collection("sessions").doc(sessionId).get()
         if (!check1.exists) {
-            removeFileAudio(req.file.filename)
+            removeFileAudio(req.file.filename, inputText)
             return res.status(400).send("invalid sessionId")
         }
         //la password sessione è giusta?
         if (check1.data()["writePermissionPassword"] !== writePermissionPassword) {
-            removeFileAudio(req.file.filename)
+            removeFileAudio(req.file.filename, inputText)
             return res.sendStatus(401)
         }
     
         if (blockedSessions.includes(sessionId)) {
-            removeFileAudio(req.file.filename)
+            removeFileAudio(req.file.filename, inputText)
             return res.status(420).send("a chat is already in the process of creation")
         } else
             blockedSessions.push(sessionId)
     
-    const tempo2 = Date.now()
+
+    // --- transcription level ---
+        
         let transcription
-        try {
-            transcription = await openai.audio.transcriptions.create({
-                file: fs.createReadStream(path.join(__dirname, '../audio', req.file.filename)),
-                model: "whisper-1",
-                language: "it"
-            })
-        } catch (error) {
-            console.log(error)
-            removeFileAudio(req.file.filename)
-            blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
-            return res.sendStatus(500)
-        }
-    
-        const content = transcription.text
+        let content
 
-    const tempo3 = Date.now()
-        try {
-            bucket.upload(path.join(__dirname, '../audio', req.file.filename), {
-                destination: `sessions/${sessionId}/${req.file.filename}`,
-                metadata: {
-                    contentType: req.file.mimetype
-                },
-            }).then(() => {
-                removeFileAudio(req.file.filename)
-
-                io.of("/chat").to(sessionId).emit('chat', {
-                    status: "only-input",
-                    authorId,
-                    audioId: req.file.filename,
-                    audioTranscription: content,
-                    timestamp: parseInt(Date.now()/1000)
+        if (!inputText) {
+            try {
+                transcription = await openai.audio.transcriptions.create({
+                    file: fs.createReadStream(path.join(__dirname, '../audio', req.file.filename)),
+                    model: "whisper-1",
+                    language: "it"
                 })
-            })
-        } catch (error) {
-            removeFileAudio(req.file.filename)
+            } catch (error) {
+                console.log(error)
+                removeFileAudio(req.file.filename, inputText)
+                blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
+                return res.sendStatus(500)
+            }
+        
+            content = transcription.text
+    
+            try {
+                bucket.upload(path.join(__dirname, '../audio', req.file.filename), {
+                    destination: `sessions/${sessionId}/${req.file.filename}`,
+                    metadata: {
+                        contentType: req.file.mimetype
+                    },
+                }).then(() => {
+                    removeFileAudio(req.file.filename, inputText)
+    
+                    io.of("/chat").to(sessionId).emit('chat', {
+                        status: "input",
+                        authorId,
+                        audioId: req.file.filename,
+                        audioTranscription: content,
+                        timestamp: parseInt(Date.now()/1000)
+                    })
+                })
+            } catch (error) {
+                removeFileAudio(req.file.filename, inputText)
+            }
+        } else {
+            content = inputTextContent
         }
 
-    const tempo4 = Date.now()
+    // --- download messages level ---
+
         //la chat è gia stata inizializzata?    
-        const oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").get()
+        const oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").limit(10).get()
         
         let messages = []
         const timeBeforeChatGPT = parseInt(Date.now()/1000)
-    const tempo5 = Date.now()
+
         if (oldChats.empty) { //se è una nuova chat
             messages = [
                 {
@@ -213,43 +279,140 @@ module.exports = io => {
                 content: content
             })
         }
-    const tempo6 = Date.now()
-        let response
+
+
+    // --- chat gpt level ---
+
+        let completion
         try {
-            response = await openai.chat.completions.create({
+            completion = await openai.chat.completions.create({
                 model: "gpt-3.5-turbo",
                 messages,
                 temperature: 1,
-                max_tokens: 165,
+                // max_tokens: 165,
                 top_p: 1,
                 frequency_penalty: 0,
                 presence_penalty: 0,
+                stream: true,
             })
         } catch (error) {
-            console.error(error)
+            console.log(error)
+            removeFileAudio(req.file.filename, inputText)
             blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
             return res.sendStatus(500)
         }
+
     
-    const tempo7 = Date.now()
-        messages.push(response["choices"][0]["message"])
-    
-        const assistantAudioId = new Date().toISOString() + authorId + ".mp3" //se cambi tipo di file da textToSpeech cambia .mp3 finale
-    
+        let fullMessage = ""
+        let string = ""
+        let completionStarted = false
+
+        for await (const chunk of completion) {
+            if (!completionStarted) {
+                completionStarted = true
+                io.of("/chat").to(sessionId).emit('chat', {
+                    status: "start-output-stream",
+                    authorId
+                })
+            }
+
+            const text = chunk.choices[0].delta.content
+
+            // console.log(text)
+
+            if (text) {
+                fullMessage += text
+                string += text
+
+                io.of("/chat").to(sessionId).emit('chat', {
+                    status: "output-text-stream",
+                    authorId,
+                    content: text
+                })
+            }
+
+            if (!string || (!text && chunk.choices[0].finish_reason !== "stop"))
+                continue
+
+            if (chunk.choices[0].finish_reason === "stop" || ((text.includes(".") || text.includes("!") || text.includes("?")) && string.length > 6 ) ) {
+                
+                textToSpeechClient.synthesizeSpeech({
+                    input: {
+                        text: string
+                    },
+                    voice: {
+                        languageCode: "it-IT",
+                        name: "it-IT-Neural2-C"
+                    },
+                    audioConfig: {
+                        audioEncoding: 'MP3',
+                        pitch: -2.8,
+                        speakingRate: 1
+                    },
+                }).then(async (textToSpeechresponse) => {
+                    const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
+
+                    const writeFile = util.promisify(fs.writeFile)
+                    await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
+                
+                    
+                    try {
+                        await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
+                            destination: `sessions/${sessionId}/${assistantAudioId}`,
+                            metadata: {
+                                contentType: "audio/mp3"
+                            },
+                        })
+                    } catch (error) {
+                        removeFileAudio(assistantAudioId)
+                    }
+
+                    removeFileAudio(assistantAudioId)
+
+                    io.of("/chat").to(sessionId).emit('chat', {
+                        status: "output-audio-stream",
+                        authorId,
+                        content: `${process.env.URL}audio/${sessionId}/${assistantAudioId}`
+                    })
+
+                }).catch((error) => {
+                    console.error(error)
+                    blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
+                    return res.sendStatus(500)
+                })
+
+                string = ""
+            }
+        }
+
+        io.of("/chat").to(sessionId).emit('chat', {
+            status: "end-output-stream",
+            authorId
+        })
+
+    // --- upload messages level ---
+
+        messages.push({
+            "role": "assistant",
+            "content": fullMessage
+        })
+
         const batch = db.batch()
+
         if (oldChats.empty) { //se è una nuova chat
             messages.forEach((doc) => {
                 switch (doc.role) {
                     case "assistant":
                         doc.timestamp = parseInt(Date.now()/1000)
-                        doc.audioId = assistantAudioId
+                        // doc.audioId = assistantAudioId
                     break
                     case "system":
                         doc.timestamp = timeBeforeChatGPT - 2
                     break
                     case "user":
                         doc.timestamp = timeBeforeChatGPT - 1
-                        doc.audioId = req.file.filename
+                        if (!inputText)
+                            doc.audioId = req.file.filename
                     break
                 }
                 
@@ -262,91 +425,41 @@ module.exports = io => {
     
                 if (obj.role === "assistant") {
                     obj.timestamp = parseInt(Date.now()/1000)
-                    obj.audioId = assistantAudioId
+                    // obj.audioId = assistantAudioId
                 }
                 else {
                     obj.timestamp = timeBeforeChatGPT - 1
-                    obj.audioId = req.file.filename
+                    if (!inputText)
+                        obj.audioId = req.file.filename
                 }
     
                 const docRef = db.collection("sessions").doc(sessionId).collection(authorId).doc()
                 batch.set(docRef, obj)
             }
         }
+
         await batch.commit()
-    const tempo8 = Date.now()
-    
-        let textToSpeechresponse
-    
-        try {
-            textToSpeechresponse = await textToSpeechClient.synthesizeSpeech({
-                input: {
-                    text: response["choices"][0]["message"]["content"]
-                },
-                voice: {
-                    languageCode: "it-IT",
-                    name: "it-IT-Neural2-C"
-                },
-                audioConfig: {
-                    audioEncoding: 'MP3',
-                    pitch: -2.8,
-                    speakingRate: 1
-                },
-            })
-        } catch (error) {
-            console.error(error)
-            blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
-            return res.sendStatus(500)
-        }
-            
-        const writeFile = util.promisify(fs.writeFile)
-        await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
-    
-    
-    const tempo9 = Date.now()
-    
-        try {
-            await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
-                destination: `sessions/${sessionId}/${assistantAudioId}`,
-                metadata: {
-                    contentType: "audio/mp3"
-                },
-            })
-        } catch (error) {
-            removeFileAudio(assistantAudioId)
-        }
-    
-        removeFileAudio(assistantAudioId)
-    
-    const tempo10 = Date.now()
+
+        
+    // --- response level ---
 
         const finalRespose = {
             status: "done",
-            audioId: req.file.filename,
             audioTranscription: content,
-            assistantAudioId,
-            response: response["choices"][0]["message"]["content"]
+            // assistantAudioId,
+            response: fullMessage
         }
+
+        if (!inputText)
+            finalRespose.audioId = req.file.filename
     
         res.send(finalRespose)
 
-        finalRespose.authorId = authorId
-        finalRespose.status = "done"
-        finalRespose.timestamp = parseInt(Date.now()/1000)
-        
-        // notare che la risposta finale ha una piccola probabilità di arrivare dopo il only-input
-        // in quanto esso viene mandato dopo che l'audio di input viene uplodato sul cloud
-        // e non aspetta la fine prima di procedere col codice
-        io.of("/chat").to(sessionId).emit('chat', finalRespose)
+        // finalRespose.authorId = authorId
+        // finalRespose.status = "done"
+        // finalRespose.timestamp = parseInt(Date.now()/1000)
     
         blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
-    
-        console.log("check di permessi, sessione e password", tempo2 - tempo1)
-        console.log("speech to text", tempo3 - tempo2)
-        console.log("chat gpt", tempo7 - tempo6)
-        console.log("salva risposte su database", tempo8 - tempo7)
-        console.log("text to speech", tempo9 - tempo8)
-        console.log("tempotot", tempo10 - tempo1)
     })
 
     return router

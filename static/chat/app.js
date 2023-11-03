@@ -65,9 +65,13 @@ const chatAuthors = [
 
 const socket = io("/chat", { query: `sessionId=${sessionId}` })
 
+let botResponse
+let hallo = false
+
 socket.on("chat", chat => {
     const authorContainer = document.getElementById(chat.authorId)
-    if (chat.status == "only-input") {
+    if (chat.status == "input") {
+
         const userResponse = document.createElement("div")
         userResponse.className = "message user-message"
         userResponse.innerText = chat.audioTranscription
@@ -83,28 +87,51 @@ socket.on("chat", chat => {
                 userAudioElement.append(userAudioSourceElement)
             userAudio.append(userAudioElement)
         authorContainer.append(userAudio)
-    } else {
-        const botResponse = document.createElement("div")
+
+    } else if (chat.status == "start-output-stream") {
+
+        botResponse = document.createElement("div")
         botResponse.className = "message bot-message"
-        botResponse.innerText = chat.response
         authorContainer.append(botResponse)
+
+    } else if (chat.status == "output-audio-stream") {
 
         const botAudio = document.createElement("div")
         botAudio.className = "message bot-audio"
             const botAudioElement = document.createElement("audio")
             botAudioElement.controls = true
                 const botAudioSourceElement = document.createElement("source")
-                botAudioSourceElement.src = url + "audio/" + sessionId + "/" + chat.assistantAudioId
+                botAudioSourceElement.src = chat.content
                 botAudioSourceElement.type = "audio/mp3"
                 botAudioElement.append(botAudioSourceElement)
                 botAudio.append(botAudioElement)
         authorContainer.append(botAudio)
+
+        if (!hallo) {
+            hallo = true
+
+            botAudioElement.play()
+
+        }
+
+    } else if (chat.status == "output-text-stream") {
+
+        botResponse.innerText += chat.content
+
     }
 
-    chatAuthors[findIndexOfAuthor(chat.authorId.split("-")[1])].lastMessageTimestamp = chat.timestamp
-    rearrangeChatList()
 
-    authorContainer.scrollTo(0, authorContainer.scrollHeight)
+
+
+    if (chat.status !== "output-text-stream") {
+
+        chatAuthors[findIndexOfAuthor(chat.authorId.split("-")[1])].lastMessageTimestamp = chat.timestamp
+        rearrangeChatList()
+    
+        authorContainer.scrollTo(0, authorContainer.scrollHeight)
+
+    }
+
 })
 
 for (const [key, value] of Object.entries(chats)) {
@@ -207,7 +234,124 @@ function rearrangeChatList() {
     }
 }
 
+function activeChatting() {
+    const chatContainers = document.getElementsByClassName("chat-container")
+    for (let i = 0; i < chatContainers.length; i++) {
+        chatContainers[i].classList.add("chatting-active")
+        chatContainers[i].scrollTo(0, chatContainers[i].scrollHeight)
+    }
+
+    document.getElementById("chat-container-input").classList.add("chatting-active")
+}
+
 if (!firstCall)
     rearrangeChatList()
+
+activeChatting()
+
+
+
+
+
+
+let inputMode = "mic" // "send"
+const inputAction = document.getElementById("input-action")
+const textInput = document.getElementById("text-input")
+let isRecording = false
+const stopRecording = document.getElementById("stop-recording-audio-input")
+
+inputAction.addEventListener("touchstart", () => {
+    if (inputMode == "send")
+        return 
+
+    setTimeout(() => {
+        if (!textInput.value)
+            startRecording()
+    }, 50)
+})
+stopRecording.addEventListener("touchend", endRecording)
+inputAction.addEventListener("mousedown", (e) => {
+    if (e.button !== 0 || e.sourceCapabilities.firesTouchEvents)
+        return
+
+    setTimeout(() => {
+        if (!textInput.value)
+            startRecording()
+    }, 50)
+})
+stopRecording.addEventListener("mouseup", (e) => {
+    if (e.button !== 0 || e.sourceCapabilities.firesTouchEvents)
+        return
+
+    endRecording()
+})
+
+
+
+textInput.addEventListener("focus", () => {
+    micToSend()
+})
+
+textInput.addEventListener("blur", () => {
+    if (!textInput.value)
+        sendToMic()
+})
+
+async function send() {
+    const formData = new FormData()
+    formData.append("audio", audioBlob, "test.wav")
+    
+    const myHeaders = new Headers();
+    myHeaders.append("writepermissionpassword", writePermissionPassword)
+    
+    let result  = await fetch("http://localhost:3000/api/" + sessionId + "/new-chat/" + authorId, {
+        method: 'post',
+        headers: myHeaders,
+        body: formData,
+        redirect: 'follow'
+    })
+    
+    
+    console.log(result)
+    const responsejson = await result.json()
+    console.log(responsejson)
+}
+
+
+function micToSend() {
+    document.getElementById("input-action").innerText = "send"
+    inputMode = "send"
+}
+
+function sendToMic() {
+    document.getElementById("input-action").innerText = "start rec"
+    inputMode = "mic"
+}
+
+
+function startRecording() {
+    console.log("inizio a registrare")
+    isRecording = true
+    stopRecording.classList.add("active")
+
+    document.getElementById("input-action").innerText = "stop rec"
+}
+
+function endRecording() {
+    if (!isRecording)
+        return
+    isRecording = false
+    stopRecording.classList.remove("active")
+
+    console.log("finisco di registrare")
+
+
+    document.getElementById("input-action").innerText = "loading"
+}
+
+
+
+
+
 
 chatAuthors[0].button.click()
