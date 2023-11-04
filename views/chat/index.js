@@ -1,4 +1,4 @@
-module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp) => {
+module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp, writePermissionPassword = "") => {
     return /* html */`
 <html lang="it">
 <!DOCTYPE html>
@@ -72,6 +72,8 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp) => {
     <div class="hidden" id="session-id">${sessionId}</div>
     <div class="hidden" id="chats">${JSON.stringify(chats)}</div>
     <div class="hidden" id="url">${process.env.URL}</div>
+    <div class="hidden" id="wpp">${writePermissionPassword}</div>
+    
     
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script src="/chat/app.js"></script>

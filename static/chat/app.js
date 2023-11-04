@@ -1,7 +1,14 @@
 const url = document.getElementById("url").innerText; document.getElementById("url").remove()
 const sessionId = document.getElementById("session-id").innerText; document.getElementById("session-id").remove()
 const chats = JSON.parse(document.getElementById("chats").innerText); document.getElementById("chats").remove()
+const writePermissionPassword = document.getElementById("wpp").innerText; document.getElementById("wpp").remove()
+
+if (writePermissionPassword)
+    activeChatting()
+
 let firstCall = false
+
+let selectedAuthor = ""
 
 const dividers = [1, 1000, 60, 60, 24, 30, 12]
 const dividersName = ["now", "s", "m", "h", "g", "m", "a"]
@@ -115,8 +122,13 @@ socket.on("chat", chat => {
         }
 
     } else if (chat.status == "output-text-stream") {
+        const scrollBefore = authorContainer.clientHeight + authorContainer.scrollTop === authorContainer.scrollHeight
 
         botResponse.innerText += chat.content
+
+        if (scrollBefore)
+            authorContainer.scrollTo(0, authorContainer.scrollHeight)
+
 
     }
 
@@ -127,8 +139,6 @@ socket.on("chat", chat => {
 
         chatAuthors[findIndexOfAuthor(chat.authorId.split("-")[1])].lastMessageTimestamp = chat.timestamp
         rearrangeChatList()
-    
-        authorContainer.scrollTo(0, authorContainer.scrollHeight)
 
     }
 
@@ -196,6 +206,8 @@ for (let i = 0; i < chatAuthors.length; i++) {
             if (chatAuthors[j].id !== a.id) {
                 chatAuthors[j].button.classList.remove("active")
                 chatAuthors[j].view.classList.remove("active")
+            } else {
+                selectedAuthor = chatAuthors[j].id
             }
         }
         a.view.scrollTo(0, a.view.scrollHeight)
@@ -247,8 +259,6 @@ function activeChatting() {
 if (!firstCall)
     rearrangeChatList()
 
-activeChatting()
-
 
 
 
@@ -260,9 +270,14 @@ const textInput = document.getElementById("text-input")
 let isRecording = false
 const stopRecording = document.getElementById("stop-recording-audio-input")
 
+addEventListener("keypress", (e) => {
+    if (e.key === "Enter" && inputMode == "send" && textInput.value)
+        send()
+})
+
 inputAction.addEventListener("touchstart", () => {
     if (inputMode == "send")
-        return 
+        return send()
 
     setTimeout(() => {
         if (!textInput.value)
@@ -273,6 +288,9 @@ stopRecording.addEventListener("touchend", endRecording)
 inputAction.addEventListener("mousedown", (e) => {
     if (e.button !== 0 || e.sourceCapabilities.firesTouchEvents)
         return
+
+    if (inputMode == "send")
+        return send()
 
     setTimeout(() => {
         if (!textInput.value)
@@ -298,19 +316,22 @@ textInput.addEventListener("blur", () => {
 })
 
 async function send() {
+    const value = textInput.value
+
+    textInput.value = ""
+
     const formData = new FormData()
-    formData.append("audio", audioBlob, "test.wav")
+    formData.append("inputText", value)
     
     const myHeaders = new Headers();
     myHeaders.append("writepermissionpassword", writePermissionPassword)
     
-    let result  = await fetch("http://localhost:3000/api/" + sessionId + "/new-chat/" + authorId, {
+    let result = await fetch(url + "api/" + sessionId + "/new-chat/chat-" + selectedAuthor + "?input=text", {
         method: 'post',
         headers: myHeaders,
         body: formData,
         redirect: 'follow'
     })
-    
     
     console.log(result)
     const responsejson = await result.json()
@@ -328,13 +349,39 @@ function sendToMic() {
     inputMode = "mic"
 }
 
+let mediaRecorder
+let audioChunks = []
+
 
 function startRecording() {
-    console.log("inizio a registrare")
     isRecording = true
     stopRecording.classList.add("active")
 
     document.getElementById("input-action").innerText = "stop rec"
+
+    navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then(function (stream) {
+            mediaRecorder = new MediaRecorder(stream)
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0)
+                    audioChunks.push(event.data)
+            }
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: "audio/wav" })
+
+                sendAudioDataToServer(audioBlob)
+
+                audioChunks = []
+            }
+
+            mediaRecorder.start()
+        })
+        .catch((err) => {
+            console.error("Error accessing the microphone: " + err);
+        })
 }
 
 function endRecording() {
@@ -343,15 +390,72 @@ function endRecording() {
     isRecording = false
     stopRecording.classList.remove("active")
 
-    console.log("finisco di registrare")
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop()
 
-
-    document.getElementById("input-action").innerText = "loading"
+        document.getElementById("input-action").innerText = "loading"
+    }
 }
 
 
 
+async function sendAudioDataToServer(audioBlob) {
+    const formData = new FormData()
+    formData.append("audio", audioBlob, "test.wav")
+
+    const myHeaders = new Headers();
+    myHeaders.append("writepermissionpassword", writePermissionPassword)
+
+    let result  = await fetch(url + "api/" + sessionId + "/new-chat/chat-" + selectedAuthor, {
+        method: 'post',
+        headers: myHeaders,
+        body: formData,
+        redirect: 'follow'
+    })
+    
+    console.log(result)
+    const responsejson = await result.json()
+    console.log(responsejson)
+
+    // const userResponse = document.createElement("div")
+    // userResponse.className = "message user-message"
+    // userResponse.innerText = responsejson.audioTranscription
+    // document.getElementById("chat-monet").append(userResponse)
+
+    // const userAudio = document.createElement("div")
+    // userAudio.className = "message user-audio"
+    //     const userAudioElement = document.createElement("audio")
+    //     userAudioElement.controls = true
+    //         const userAudioSourceElement = document.createElement("source")
+    //         userAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.audioId
+    //         userAudioSourceElement.type = "audio/wav"
+    //         userAudioElement.append(userAudioSourceElement)
+    //     userAudio.append(userAudioElement)
+    // document.getElementById("chat-monet").append(userAudio)
+
+    // const botResponse = document.createElement("div")
+    // botResponse.className = "message bot-message"
+    // botResponse.innerText = responsejson.response
+    // document.getElementById("chat-monet").append(botResponse)
+
+    // const botAudio = document.createElement("div")
+    // botAudio.className = "message bot-audio"
+    //     const botAudioElement = document.createElement("audio")
+    //     botAudioElement.controls = true
+    //         const botAudioSourceElement = document.createElement("source")
+    //         botAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.assistantAudioId
+    //         botAudioSourceElement.type = "audio/wav"
+    //         botAudioElement.append(botAudioSourceElement)
+    //         botAudio.append(botAudioElement)
+    // document.getElementById("chat-monet").append(botAudio)
+
+    // botAudioElement.play()
+}
 
 
 
 chatAuthors[0].button.click()
+
+socket.on("chat", chat => {
+    console.log(chat)
+})

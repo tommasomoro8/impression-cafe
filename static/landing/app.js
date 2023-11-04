@@ -60,7 +60,7 @@ async function openNewChatSection() {
     const dateAfterApiCall = Date.now()
     
     setTimeout(() => 
-        window.location.href = "/chat/" + result.sessionId,
+        window.location.href = "/chat/" + result.sessionId + "?wpp=" + result.writePermissionPassword,
     1000 - (dateAfterApiCall - dateBeforeApiCall))
 }
 

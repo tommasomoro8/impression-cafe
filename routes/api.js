@@ -17,7 +17,7 @@ const authors = [
     {
         id: "chat-monet",
         name: "Claude Monet",
-        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando nella risposta in totale al massimo 400 o 500 caratteri."
+        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-seurat",
@@ -49,52 +49,6 @@ function isAuthorValid(author) {
 
     return -1
 }
-
-
-router.get("/test", async (req, res) => {
-//     const sessionId = "C7VjmYhkfJdgCtcgKXVS"
-//     textToSpeechClient.synthesizeSpeech({
-//         input: {
-//             text: "Durante la mia vita ho avuto l'opportunità di vivere in diversi luoghi, ma ci sono tre luoghi rilevanti che vorrei menzionare. \n\nIl primo è Le Havre, la città portuale della Normandia dove sono nato nel 1840. Questo luogo ha lasciato un'impronta importante sulla mia infanzia e ha influenzato la mia passione per il mare e il suo paesaggio. Il secondo luogo significativo è Parigi, la città delle arti e degli artisti."
-//         },
-//         voice: {
-//             languageCode: "it-IT",
-//             name: "it-IT-Neural2-C"
-//         },
-//         audioConfig: {
-//             audioEncoding: 'MP3',
-//             pitch: -2.8,
-//             speakingRate: 1
-//         },
-//     }).then(async (textToSpeechresponse) => {
-//         const assistantAudioId = new Date().toISOString() + "sfgewtajhsrtfdgj" + ".mp3"
-
-//         const writeFile = util.promisify(fs.writeFile)
-//         await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
-    
-        
-//         try {
-//             await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
-//                 destination: `sessions/${sessionId}/${assistantAudioId}`,
-//                 metadata: {
-//                     contentType: "audio/mp3"
-//                 },
-//             })
-//         } catch (error) {
-//             removeFileAudio(assistantAudioId)
-//         }
-
-//         removeFileAudio(assistantAudioId)
-
-//         res.redirect(`http://localhost:3000/audio/${sessionId}/${assistantAudioId}`)
-
-        
-//     }).catch((error) => {
-//         console.error(error)
-//         return res.sendStatus(500)
-//     })
-})
-
 
 
 router.post("/new-session", async (req, res) => {
@@ -159,7 +113,12 @@ module.exports = io => {
 
         const inputText = req.query["input"] === "text"
         const inputTextContent = req.body.inputText
-        
+
+        if (inputText) {
+            req.file = {}
+            req.file.filename = "null"
+        }
+
     // --- authentication level ---
 
         if (!inputText && !req.file)
@@ -245,6 +204,14 @@ module.exports = io => {
             }
         } else {
             content = inputTextContent
+
+            io.of("/chat").to(sessionId).emit('chat', {
+                status: "input",
+                authorId,
+                audioId: undefined,
+                audioTranscription: inputTextContent,
+                timestamp: parseInt(Date.now()/1000)
+            })
         }
 
     // --- download messages level ---
@@ -353,7 +320,7 @@ module.exports = io => {
                     const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
 
                     const writeFile = util.promisify(fs.writeFile)
-                    await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary')
+                    await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
                 
                     
                     try {
@@ -364,6 +331,7 @@ module.exports = io => {
                             },
                         })
                     } catch (error) {
+                        console.log(error)
                         removeFileAudio(assistantAudioId)
                     }
 
@@ -377,8 +345,8 @@ module.exports = io => {
 
                 }).catch((error) => {
                     console.error(error)
-                    blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
-                    return res.sendStatus(500)
+                    // blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
+                    // return res.sendStatus(500)
                 })
 
                 string = ""
