@@ -3,6 +3,8 @@ const sessionId = document.getElementById("session-id").innerText; document.getE
 const chats = JSON.parse(document.getElementById("chats").innerText); document.getElementById("chats").remove()
 const writePermissionPassword = document.getElementById("wpp").innerText; document.getElementById("wpp").remove()
 
+let TEMPDATA
+
 if (writePermissionPassword)
     activeChatting()
 
@@ -45,7 +47,6 @@ function seeTimeDifference(time, returnMs = false) {
 }
 
 
-
 const chatAuthors = [
     {
         id: "monet",
@@ -70,6 +71,62 @@ const chatAuthors = [
     }
 ]
 
+function appendUserMessage(text = "", authorId) {
+    const authorContainer = document.getElementById(authorId)
+
+    const userResponse = document.createElement("div")
+    userResponse.className = "message user-message"
+    userResponse.innerText = text
+    authorContainer.append(userResponse)
+
+    return userResponse
+}
+
+function appendUserAudio(link, authorId) {
+    const authorContainer = document.getElementById(authorId)
+
+    const userAudio = document.createElement("div")
+    userAudio.className = "message user-audio"
+        const userAudioElement = document.createElement("audio")
+        userAudioElement.controls = true
+            const userAudioSourceElement = document.createElement("source")
+            userAudioSourceElement.src = link
+            userAudioSourceElement.type = "audio/wav"
+            userAudioElement.append(userAudioSourceElement)
+        userAudio.append(userAudioElement)
+    authorContainer.append(userAudio)
+
+    return userAudioElement
+}
+
+function appendBotMessage(text = "", authorId) {
+    const authorContainer = document.getElementById(authorId)
+
+    const botResponse = document.createElement("div")
+    botResponse.className = "message bot-message"
+    botResponse.innerText = text
+    authorContainer.append(botResponse)
+
+    return botResponse
+}
+
+function appendBotAudio(link, authorId) {
+    const authorContainer = document.getElementById(authorId)
+
+    const botAudio = document.createElement("div")
+    botAudio.className = "message bot-audio"
+        const botAudioElement = document.createElement("audio")
+        botAudioElement.controls = true
+            const botAudioSourceElement = document.createElement("source")
+            botAudioSourceElement.src = link
+            botAudioSourceElement.type = "audio/mp3"
+            botAudioElement.append(botAudioSourceElement)
+            botAudio.append(botAudioElement)
+    authorContainer.append(botAudio)
+    
+    return botAudioElement
+}
+
 const socket = io("/chat", { query: `sessionId=${sessionId}` })
 
 let botResponse
@@ -77,114 +134,59 @@ let hallo = false
 
 socket.on("chat", chat => {
     const authorContainer = document.getElementById(chat.authorId)
+    const scrollBefore = authorContainer.clientHeight + authorContainer.scrollTop === authorContainer.scrollHeight
+
     if (chat.status == "input") {
-
-        const userResponse = document.createElement("div")
-        userResponse.className = "message user-message"
-        userResponse.innerText = chat.audioTranscription
-        authorContainer.append(userResponse)
-
-        const userAudio = document.createElement("div")
-        userAudio.className = "message user-audio"
-            const userAudioElement = document.createElement("audio")
-            userAudioElement.controls = true
-                const userAudioSourceElement = document.createElement("source")
-                userAudioSourceElement.src = url + "audio/" + sessionId + "/" + chat.audioId
-                userAudioSourceElement.type = "audio/wav"
-                userAudioElement.append(userAudioSourceElement)
-            userAudio.append(userAudioElement)
-        authorContainer.append(userAudio)
-
+        appendUserMessage(chat.audioTranscription, chat.authorId)
+        if (chat.audioId)
+            appendUserAudio(url + "audio/" + sessionId + "/" + chat.audioId, chat.authorId)
     } else if (chat.status == "start-output-stream") {
-
-        botResponse = document.createElement("div")
-        botResponse.className = "message bot-message"
-        authorContainer.append(botResponse)
-
+        botResponse = appendBotMessage("", chat.authorId)
     } else if (chat.status == "output-audio-stream") {
+        let botAudioElement
+        if (chat.audioId)
+            botAudioElement = appendBotAudio(url + "audio/" + sessionId + "/" + chat.audioId, chat.authorId, chat.authorId)
 
-        const botAudio = document.createElement("div")
-        botAudio.className = "message bot-audio"
-            const botAudioElement = document.createElement("audio")
-            botAudioElement.controls = true
-                const botAudioSourceElement = document.createElement("source")
-                botAudioSourceElement.src = chat.content
-                botAudioSourceElement.type = "audio/mp3"
-                botAudioElement.append(botAudioSourceElement)
-                botAudio.append(botAudioElement)
-        authorContainer.append(botAudio)
+        if (chat.audioId && chat.audioOrder === 0) {
+            console.log(Date.now() - TEMPDATA)
+        }
 
         if (!hallo) {
             hallo = true
-
-            botAudioElement.play()
-
+            if (chat.audioId)
+                botAudioElement.play()
         }
-
     } else if (chat.status == "output-text-stream") {
-        const scrollBefore = authorContainer.clientHeight + authorContainer.scrollTop === authorContainer.scrollHeight
 
         botResponse.innerText += chat.content
 
-        if (scrollBefore)
-            authorContainer.scrollTo(0, authorContainer.scrollHeight)
-
-
     }
-
-
-
 
     if (chat.status !== "output-text-stream") {
-
         chatAuthors[findIndexOfAuthor(chat.authorId.split("-")[1])].lastMessageTimestamp = chat.timestamp
         rearrangeChatList()
-
     }
-
+    
+    if (scrollBefore)
+            authorContainer.scrollTo(0, authorContainer.scrollHeight)
 })
 
 for (const [key, value] of Object.entries(chats)) {
-    const authorContainer = document.getElementById(key)
     for (let i = 0; i < value.length; i++) {
         if (value[i].role == "user") {
-            const userResponse = document.createElement("div")
-            userResponse.className = "message user-message"
-            userResponse.innerText = value[i].content
-            authorContainer.append(userResponse)
-    
-            const userAudio = document.createElement("div")
-            userAudio.className = "message user-audio"
-                const userAudioElement = document.createElement("audio")
-                userAudioElement.controls = true
-                    const userAudioSourceElement = document.createElement("source")
-                    userAudioSourceElement.src = url + "audio/" + sessionId + "/" + value[i].audioId
-                    userAudioSourceElement.type = "audio/wav"
-                    userAudioElement.append(userAudioSourceElement)
-                userAudio.append(userAudioElement)
-            authorContainer.append(userAudio)
+            appendUserMessage(value[i].content, key)
+            if (value[i].audioId)
+                appendUserAudio(url + "audio/" + sessionId + "/" + value[i].audioId, key)
         } else {
-            const botResponse = document.createElement("div")
-            botResponse.className = "message bot-message"
-            botResponse.innerText = value[i].content
-            authorContainer.append(botResponse)
-    
-            const botAudio = document.createElement("div")
-            botAudio.className = "message bot-audio"
-                const botAudioElement = document.createElement("audio")
-                botAudioElement.controls = true
-                    const botAudioSourceElement = document.createElement("source")
-                    botAudioSourceElement.src = url + "audio/" + sessionId + "/" + value[i].audioId
-                    botAudioSourceElement.type = "audio/mp3"
-                    botAudioElement.append(botAudioSourceElement)
-                    botAudio.append(botAudioElement)
-            authorContainer.append(botAudio)
+            appendBotMessage(value[i].content, key)
+            if (value[i].audioId)
+                appendBotAudio(url + "audio/" + sessionId + "/" + value[i].audioId, key)
         }
 
         if (i == value.length-1) {
             chatAuthors[findIndexOfAuthor(key.split("-")[1])].lastMessageTimestamp = value[i].timestamp
             rearrangeChatList()
-            authorContainer.scrollTo(0, authorContainer.scrollHeight)
+            document.getElementById(key).scrollTo(0, document.getElementById(key).scrollHeight)
             firstCall = true
         }
     }
@@ -325,6 +327,8 @@ async function send() {
     
     const myHeaders = new Headers();
     myHeaders.append("writepermissionpassword", writePermissionPassword)
+
+    TEMPDATA = Date.now()
     
     let result = await fetch(url + "api/" + sessionId + "/new-chat/chat-" + selectedAuthor + "?input=text", {
         method: 'post',
@@ -416,46 +420,11 @@ async function sendAudioDataToServer(audioBlob) {
     console.log(result)
     const responsejson = await result.json()
     console.log(responsejson)
-
-    // const userResponse = document.createElement("div")
-    // userResponse.className = "message user-message"
-    // userResponse.innerText = responsejson.audioTranscription
-    // document.getElementById("chat-monet").append(userResponse)
-
-    // const userAudio = document.createElement("div")
-    // userAudio.className = "message user-audio"
-    //     const userAudioElement = document.createElement("audio")
-    //     userAudioElement.controls = true
-    //         const userAudioSourceElement = document.createElement("source")
-    //         userAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.audioId
-    //         userAudioSourceElement.type = "audio/wav"
-    //         userAudioElement.append(userAudioSourceElement)
-    //     userAudio.append(userAudioElement)
-    // document.getElementById("chat-monet").append(userAudio)
-
-    // const botResponse = document.createElement("div")
-    // botResponse.className = "message bot-message"
-    // botResponse.innerText = responsejson.response
-    // document.getElementById("chat-monet").append(botResponse)
-
-    // const botAudio = document.createElement("div")
-    // botAudio.className = "message bot-audio"
-    //     const botAudioElement = document.createElement("audio")
-    //     botAudioElement.controls = true
-    //         const botAudioSourceElement = document.createElement("source")
-    //         botAudioSourceElement.src = "http://localhost:3000/audio/" + sessionId + "/" + responsejson.assistantAudioId
-    //         botAudioSourceElement.type = "audio/wav"
-    //         botAudioElement.append(botAudioSourceElement)
-    //         botAudio.append(botAudioElement)
-    // document.getElementById("chat-monet").append(botAudio)
-
-    // botAudioElement.play()
 }
-
 
 
 chatAuthors[0].button.click()
 
-socket.on("chat", chat => {
-    console.log(chat)
-})
+// socket.on("chat", chat => {
+//     console.log(chat)
+// })

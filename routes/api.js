@@ -17,17 +17,17 @@ const authors = [
     {
         id: "chat-monet",
         name: "Claude Monet",
-        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri."
+        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-seurat",
         name: "Georges Seurat",
-        systemContent: "Devi fare finta di essere Georges Seurat. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri."
+        systemContent: "Devi fare finta di essere Georges Seurat. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-degas",
         name: "Edgar Degas",
-        systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente, e usa risposte brevi, usando al massimo 50 o 60 caratteri.."
+        systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri.."
     }
 ]
 const authorsLength = authors.length
@@ -269,17 +269,37 @@ module.exports = io => {
             return res.sendStatus(500)
         }
 
-    
         let fullMessage = ""
         let string = ""
         let completionStarted = false
+
+        const audioContainer = {}
+        let audioOrder = 0
+        let audioLenght = 1
+        let startCheckingAudioLenght = false
+
+        function checkingAudioLenght() {
+            if (!startCheckingAudioLenght || audioOrder !== audioLenght-1)
+                return
+
+            const arr = Object.values(audioContainer)
+
+            const buf = Buffer.concat(arr)
+
+                        console.log(arr)
+                        console.log(buf);   
+
+            startCheckingAudioLenght = false
+        }
+
 
         for await (const chunk of completion) {
             if (!completionStarted) {
                 completionStarted = true
                 io.of("/chat").to(sessionId).emit('chat', {
                     status: "start-output-stream",
-                    authorId
+                    authorId,
+                    timestamp: parseInt(Date.now()/1000)
                 })
             }
 
@@ -294,7 +314,8 @@ module.exports = io => {
                 io.of("/chat").to(sessionId).emit('chat', {
                     status: "output-text-stream",
                     authorId,
-                    content: text
+                    content: text,
+                    timestamp: parseInt(Date.now()/1000)
                 })
             }
 
@@ -302,7 +323,8 @@ module.exports = io => {
                 continue
 
             if (chunk.choices[0].finish_reason === "stop" || ((text.includes(".") || text.includes("!") || text.includes("?")) && string.length > 6 ) ) {
-                
+                audioLenght++
+
                 textToSpeechClient.synthesizeSpeech({
                     input: {
                         text: string
@@ -318,6 +340,8 @@ module.exports = io => {
                     },
                 }).then(async (textToSpeechresponse) => {
                     const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
+
+                    audioContainer[audioOrder] = textToSpeechresponse[0].audioContent
 
                     const writeFile = util.promisify(fs.writeFile)
                     await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
@@ -340,8 +364,13 @@ module.exports = io => {
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "output-audio-stream",
                         authorId,
-                        content: `${process.env.URL}audio/${sessionId}/${assistantAudioId}`
+                        audioId: assistantAudioId,
+                        audioOrder,
+                        timestamp: parseInt(Date.now()/1000)
                     })
+                    audioOrder++
+
+                    checkingAudioLenght()
 
                 }).catch((error) => {
                     console.error(error)
@@ -353,9 +382,14 @@ module.exports = io => {
             }
         }
 
+        startCheckingAudioLenght = true
+
+        checkingAudioLenght()
+
         io.of("/chat").to(sessionId).emit('chat', {
             status: "end-output-stream",
-            authorId
+            authorId,
+            timestamp: parseInt(Date.now()/1000)
         })
 
     // --- upload messages level ---
