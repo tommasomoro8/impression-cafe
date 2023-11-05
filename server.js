@@ -31,7 +31,7 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.socket.io"],
-            mediaSrc: ["'self'", "https://firebasestorage.googleapis.com"],
+            mediaSrc: ["'self'", "blob:", "https://firebasestorage.googleapis.com"],
             scriptSrcAttr: ["'unsafe-inline'"]
         },
     }

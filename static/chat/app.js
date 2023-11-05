@@ -127,6 +127,10 @@ function appendBotAudio(link, authorId) {
     return botAudioElement
 }
 
+function addSpaceBeforeNumbers(inputString) {
+    return inputString.replace(/(\D)(?=\d)/g, '$1 ');
+}
+
 const socket = io("/chat", { query: `sessionId=${sessionId}` })
 
 let botResponse
@@ -145,7 +149,7 @@ socket.on("chat", chat => {
     } else if (chat.status == "output-audio-stream") {
         let botAudioElement
         if (chat.audioId)
-            botAudioElement = appendBotAudio(url + "audio/" + sessionId + "/" + chat.audioId, chat.authorId, chat.authorId)
+            botAudioElement = appendBotAudio(url + "audio/" + sessionId + "/" + chat.audioId, chat.authorId)
 
         if (chat.audioId && chat.audioOrder === 0) {
             console.log(Date.now() - TEMPDATA)
@@ -153,12 +157,13 @@ socket.on("chat", chat => {
 
         if (!hallo) {
             hallo = true
-            if (chat.audioId)
-                botAudioElement.play()
+            // if (chat.audioId)
+            //     botAudioElement.play()
         }
     } else if (chat.status == "output-text-stream") {
 
         botResponse.innerText += chat.content
+        botResponse.innerText = addSpaceBeforeNumbers(botResponse.innerText)
 
     }
 
@@ -417,14 +422,26 @@ async function sendAudioDataToServer(audioBlob) {
         redirect: 'follow'
     })
     
-    console.log(result)
-    const responsejson = await result.json()
-    console.log(responsejson)
+    try {
+        const responsejson = await result.json()
+        console.log(responsejson)
+    } catch (error) {
+        console.log(result)
+    }
 }
 
 
 chatAuthors[0].button.click()
 
-// socket.on("chat", chat => {
-//     console.log(chat)
-// })
+const test = []
+
+socket.on("chat", chat => {
+    if (chat.status === "output-audio-stream") {
+        test.push(chat.binaryAudio)
+        const blob = new Blob(test, { type: "audio/wav" })
+        const audio = appendBotAudio(window.URL.createObjectURL(blob), chat.authorId)
+
+        if (chat.audioOrder === 0)
+            audio.play()
+    }
+})

@@ -193,6 +193,7 @@ module.exports = io => {
     
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "input",
+                        type: "audio-text",
                         authorId,
                         audioId: req.file.filename,
                         audioTranscription: content,
@@ -207,8 +208,8 @@ module.exports = io => {
 
             io.of("/chat").to(sessionId).emit('chat', {
                 status: "input",
+                type: "text",
                 authorId,
-                audioId: undefined,
                 audioTranscription: inputTextContent,
                 timestamp: parseInt(Date.now()/1000)
             })
@@ -278,18 +279,40 @@ module.exports = io => {
         let audioLenght = 1
         let startCheckingAudioLenght = false
 
-        function checkingAudioLenght() {
+        const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
+
+        async function checkingAudioLenght() {
             if (!startCheckingAudioLenght || audioOrder !== audioLenght-1)
                 return
 
-            const arr = Object.values(audioContainer)
+            startCheckingAudioLenght = false
 
+            const arr = Object.values(audioContainer)
             const buf = Buffer.concat(arr)
 
-                        console.log(arr)
-                        console.log(buf);   
+            const writeFile = util.promisify(fs.writeFile)
+            await writeFile(path.join(__dirname, '../audio', assistantAudioId), buf, 'binary') // se da errore controllare che la cartella /audio esista
 
-            startCheckingAudioLenght = false
+            try {
+                await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
+                    destination: `sessions/${sessionId}/${assistantAudioId}`,
+                    metadata: {
+                        contentType: "audio/mp3"
+                    },
+                })
+            } catch (error) {
+                console.log(error)
+                removeFileAudio(assistantAudioId)
+            }
+
+            removeFileAudio(assistantAudioId)
+
+            io.of("/chat").to(sessionId).emit('chat', {
+                status: "output-audio",
+                authorId,
+                audioId: assistantAudioId,
+                timestamp: parseInt(Date.now()/1000)
+            })
         }
 
 
@@ -304,8 +327,6 @@ module.exports = io => {
             }
 
             const text = chunk.choices[0].delta.content
-
-            // console.log(text)
 
             if (text) {
                 fullMessage += text
@@ -339,32 +360,30 @@ module.exports = io => {
                         speakingRate: 1
                     },
                 }).then(async (textToSpeechresponse) => {
-                    const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
-
                     audioContainer[audioOrder] = textToSpeechresponse[0].audioContent
 
-                    const writeFile = util.promisify(fs.writeFile)
-                    await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
+                    // const writeFile = util.promisify(fs.writeFile)
+                    // await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
                 
                     
-                    try {
-                        await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
-                            destination: `sessions/${sessionId}/${assistantAudioId}`,
-                            metadata: {
-                                contentType: "audio/mp3"
-                            },
-                        })
-                    } catch (error) {
-                        console.log(error)
-                        removeFileAudio(assistantAudioId)
-                    }
+                    // try {
+                    //     await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
+                    //         destination: `sessions/${sessionId}/${assistantAudioId}`,
+                    //         metadata: {
+                    //             contentType: "audio/mp3"
+                    //         },
+                    //     })
+                    // } catch (error) {
+                    //     console.log(error)
+                    //     removeFileAudio(assistantAudioId)
+                    // }
 
-                    removeFileAudio(assistantAudioId)
+                    // removeFileAudio(assistantAudioId)
 
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "output-audio-stream",
                         authorId,
-                        audioId: assistantAudioId,
+                        binaryAudio: textToSpeechresponse[0].audioContent,
                         audioOrder,
                         timestamp: parseInt(Date.now()/1000)
                     })
@@ -374,8 +393,6 @@ module.exports = io => {
 
                 }).catch((error) => {
                     console.error(error)
-                    // blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
-                    // return res.sendStatus(500)
                 })
 
                 string = ""
@@ -384,7 +401,7 @@ module.exports = io => {
 
         startCheckingAudioLenght = true
 
-        checkingAudioLenght()
+        await checkingAudioLenght()
 
         io.of("/chat").to(sessionId).emit('chat', {
             status: "end-output-stream",
@@ -406,7 +423,7 @@ module.exports = io => {
                 switch (doc.role) {
                     case "assistant":
                         doc.timestamp = parseInt(Date.now()/1000)
-                        // doc.audioId = assistantAudioId
+                        doc.audioId = assistantAudioId
                     break
                     case "system":
                         doc.timestamp = timeBeforeChatGPT - 2
@@ -427,7 +444,7 @@ module.exports = io => {
     
                 if (obj.role === "assistant") {
                     obj.timestamp = parseInt(Date.now()/1000)
-                    // obj.audioId = assistantAudioId
+                    obj.audioId = assistantAudioId
                 }
                 else {
                     obj.timestamp = timeBeforeChatGPT - 1
@@ -448,7 +465,7 @@ module.exports = io => {
         const finalRespose = {
             status: "done",
             audioTranscription: content,
-            // assistantAudioId,
+            assistantAudioId,
             response: fullMessage
         }
 
@@ -456,10 +473,6 @@ module.exports = io => {
             finalRespose.audioId = req.file.filename
     
         res.send(finalRespose)
-
-        // finalRespose.authorId = authorId
-        // finalRespose.status = "done"
-        // finalRespose.timestamp = parseInt(Date.now()/1000)
     
         blockedSessions.splice(blockedSessions.indexOf(sessionId), 1)
     })
