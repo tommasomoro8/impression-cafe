@@ -17,16 +17,22 @@ const authors = [
     {
         id: "chat-monet",
         name: "Claude Monet",
+        voiceName: "it-IT-Neural2-C",
+        voicePitch: 0,
         systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-seurat",
         name: "Georges Seurat",
+        voiceName: "it-IT-Neural2-C",
+        voicePitch: -1.5,
         systemContent: "Devi fare finta di essere Georges Seurat. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
     },
     {
         id: "chat-degas",
         name: "Edgar Degas",
+        voiceName: "it-IT-Neural2-C",
+        voicePitch: -2.3,
         systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri.."
     }
 ]
@@ -106,6 +112,19 @@ function removeFileAudio(filename, inputText) {
 }
 
 module.exports = io => {
+    router.get("/:id", async (req, res) => {
+        io.of("/chat").to("r8FB6lOuZOtRc3lFMDDY").emit('chat', {
+            status: "output-audio-stream",
+            authorId: "authorId",
+            binaryAudio: req.params.id,
+            audioOrder: req.params.id,
+            timestamp: parseInt(Date.now()/1000)
+        })
+
+        res.sendStatus(200)
+        
+    })
+    
     router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req, res) => {
         const sessionId = req.params.sessionId
         const authorId = req.params.authorId
@@ -218,7 +237,13 @@ module.exports = io => {
     // --- download messages level ---
 
         //la chat è gia stata inizializzata?    
-        const oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").limit(10).get()
+        let oldChats
+        try {
+            oldChats = await db.collection("sessions").doc(sessionId).collection(authorId).orderBy("timestamp", "asc").limit(10).get()
+        } catch (error) {
+            console.log(error)
+            res.status(500).send("database download messages error")
+        }
         
         let messages = []
         const timeBeforeChatGPT = parseInt(Date.now()/1000)
@@ -352,11 +377,11 @@ module.exports = io => {
                     },
                     voice: {
                         languageCode: "it-IT",
-                        name: "it-IT-Neural2-C"
+                        name: authors[authorIndex].voiceName
                     },
                     audioConfig: {
                         audioEncoding: 'MP3',
-                        pitch: -2.8,
+                        pitch: authors[authorIndex].voicePitch,
                         speakingRate: 1
                     },
                 }).then(async (textToSpeechresponse) => {
@@ -379,7 +404,6 @@ module.exports = io => {
                     // }
 
                     // removeFileAudio(assistantAudioId)
-
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "output-audio-stream",
                         authorId,
@@ -387,6 +411,7 @@ module.exports = io => {
                         audioOrder,
                         timestamp: parseInt(Date.now()/1000)
                     })
+
                     audioOrder++
 
                     checkingAudioLenght()

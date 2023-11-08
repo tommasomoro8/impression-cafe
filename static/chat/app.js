@@ -433,15 +433,53 @@ async function sendAudioDataToServer(audioBlob) {
 
 chatAuthors[0].button.click()
 
-const test = []
+let audioQueue = {}
+let previusAudioOrder = -1
+let previusAudio
+let previusAudioElement
 
 socket.on("chat", chat => {
-    if (chat.status === "output-audio-stream") {
-        test.push(chat.binaryAudio)
-        const blob = new Blob(test, { type: "audio/wav" })
-        const audio = appendBotAudio(window.URL.createObjectURL(blob), chat.authorId)
+    if (chat.status == "input") {
+        audioQueue = {}
+        previusAudio = undefined
+        previusAudioElement = undefined
+        previusAudioOrder = -1
+    } else if (chat.status === "output-audio-stream") {
+        audioQueue[chat.audioOrder] = chat.binaryAudio
+        console.log(audioQueue)
 
-        if (chat.audioOrder === 0)
-            audio.play()
+        while (chat.audioOrder-1 === previusAudioOrder || audioQueue[previusAudioOrder+1] !== undefined) {
+            // const thisChat = audioQueue[previusAudioOrder+1]
+            // const previusChat = audioQueue[previusAudioOrder]
+
+            const blob = new Blob((Object.keys(audioQueue).map(key => audioQueue[key])).splice(0, previusAudioOrder+2), { type: "audio/wav" })
+
+
+            const botAudio = document.createElement("div")
+            botAudio.className = "message bot-audio"
+                const audioElement = document.createElement("audio")
+                audioElement.controls = true
+                    const botAudioSourceElement = document.createElement("source")
+                    botAudioSourceElement.src = window.URL.createObjectURL(blob)
+                    botAudioSourceElement.type = "audio/mp3"
+                audioElement.append(botAudioSourceElement)
+            botAudio.append(audioElement)
+            document.getElementById(chat.authorId).append(botAudio)
+
+
+
+            if (previusAudioElement) {
+                audioElement.currentTime = previusAudioElement.currentTime
+                if (!previusAudioElement.paused)
+                    audioElement.play()
+                previusAudio.remove()
+            } else {
+                audioElement.play()
+            }
+            
+            previusAudio = botAudio
+            previusAudioElement = audioElement
+            previusAudioOrder++
+        }
     }
 })
