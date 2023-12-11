@@ -112,18 +112,18 @@ function removeFileAudio(filename, inputText) {
 }
 
 module.exports = io => {
-    router.get("/:id", async (req, res) => {
-        io.of("/chat").to("r8FB6lOuZOtRc3lFMDDY").emit('chat', {
-            status: "output-audio-stream",
-            authorId: "authorId",
-            binaryAudio: req.params.id,
-            audioOrder: req.params.id,
-            timestamp: parseInt(Date.now()/1000)
-        })
+    // router.get("/:id", async (req, res) => {
+    //     io.of("/chat").to("r8FB6lOuZOtRc3lFMDDY").emit('chat', {
+    //         status: "output-audio-stream",
+    //         authorId: "authorId",
+    //         binaryAudio: req.params.id,
+    //         audioOrder: req.params.id,
+    //         timestamp: parseInt(Date.now()/1000)
+    //     })
 
-        res.sendStatus(200)
+    //     res.sendStatus(200)
         
-    })
+    // })
     
     router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req, res) => {
         const sessionId = req.params.sessionId
