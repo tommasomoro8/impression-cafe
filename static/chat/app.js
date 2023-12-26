@@ -63,10 +63,17 @@ const chatAuthors = [
         buttonPreviewInterval: undefined
     },
     {
-        id: "seurat",
-        view: document.getElementById("chat-seurat"),
-        button: document.getElementById("chat-button-seurat"),
+        id: "renoir",
+        view: document.getElementById("chat-renoir"),
+        button: document.getElementById("chat-button-renoir"),
         lastMessageTimestamp: -3,
+        buttonPreviewInterval: undefined
+    },
+    {
+        id: "manet",
+        view: document.getElementById("chat-manet"),
+        button: document.getElementById("chat-button-manet"),
+        lastMessageTimestamp: -4,
         buttonPreviewInterval: undefined
     }
 ]
@@ -263,26 +270,79 @@ function activeChatting() {
     document.getElementById("chat-container-input").classList.add("chatting-active")
 }
 
-if (!firstCall)
+if (!firstCall) {
     rearrangeChatList()
+}
 
 
 
 
 
 
-let inputMode = "mic" // "send"
+
+
+
 const inputAction = document.getElementById("input-action")
+const inputActionImg = document.getElementById("input-action-img")
 const textInput = document.getElementById("text-input")
-let isRecording = false
 const stopRecording = document.getElementById("stop-recording-audio-input")
 
-addEventListener("keypress", (e) => {
-    if (e.key === "Enter" && inputMode == "send" && textInput.value)
+let inputMode = "mic" // "send" - "loading"
+let isRecording = false
+
+function selectInputActionState(mode) {
+    switch (mode) {
+        case "send":
+            inputActionImg.src = url + "chat/img/send.png"
+            inputActionImg.className = "send"
+            break;
+        case "mic":
+            inputActionImg.src = url + "chat/img/mic.png"
+            inputActionImg.className = "mic"
+            break;
+        case "loading":
+            inputActionImg.className = "loading"
+            inputActionImg.src = url + "chat/img/loading.svg"
+            break;
+    }
+}
+
+
+function openAudioModal(open = true) {
+    if (open) {
+        document.getElementById("audio-input").classList.add("show")
+        document.getElementById("text-input").classList.add("hide")
+    } else {
+        document.getElementById("audio-input").classList.remove("show")
+        document.getElementById("text-input").classList.remove("hide")
+    }
+}
+
+openAudioModal()
+
+
+
+
+document.onkeydown = (e) => {
+    if (e.key == "Enter" && inputMode == "send" && textInput.value) {
         send()
-})
+    } else if (e.key != "Enter" && inputMode != "loading") {
+        setTimeout(() => {
+            if (!textInput.value) {
+                sendToMic()
+            } else {
+                micToSend()
+            }
+        }, 10)
+    }
+}
+
+
 
 inputAction.addEventListener("touchstart", () => {
+    if (inputMode == "loading")
+        return
+
     if (inputMode == "send")
         return send()
 
@@ -291,9 +351,15 @@ inputAction.addEventListener("touchstart", () => {
             startRecording()
     }, 50)
 })
+
 stopRecording.addEventListener("touchend", endRecording)
+
+
 inputAction.addEventListener("mousedown", (e) => {
     if (e.button !== 0 || e.sourceCapabilities.firesTouchEvents)
+        return
+
+    if (inputMode == "loading")
         return
 
     if (inputMode == "send")
@@ -314,13 +380,21 @@ stopRecording.addEventListener("mouseup", (e) => {
 
 
 textInput.addEventListener("focus", () => {
-    micToSend()
+    if (inputMode == "loading")
+        return
+
+    if (textInput.value)
+        micToSend()
 })
 
 textInput.addEventListener("blur", () => {
+    if (inputMode == "loading")
+        return
+
     if (!textInput.value)
         sendToMic()
 })
+
 
 async function send() {
     const value = textInput.value
@@ -330,10 +404,13 @@ async function send() {
     const formData = new FormData()
     formData.append("inputText", value)
     
-    const myHeaders = new Headers();
+    const myHeaders = new Headers()
     myHeaders.append("writepermissionpassword", writePermissionPassword)
 
     TEMPDATA = Date.now()
+
+    inputMode = "loading"
+    selectInputActionState("loading")
     
     let result = await fetch(url + "api/" + sessionId + "/new-chat/chat-" + selectedAuthor + "?input=text", {
         method: 'post',
@@ -345,16 +422,19 @@ async function send() {
     console.log(result)
     const responsejson = await result.json()
     console.log(responsejson)
+
+    inputMode = textInput.value ? "send" : "mic"
+    selectInputActionState(textInput.value ? "send" : "mic")
 }
 
 
 function micToSend() {
-    document.getElementById("input-action").innerText = "send"
+    selectInputActionState("send")
     inputMode = "send"
 }
 
 function sendToMic() {
-    document.getElementById("input-action").innerText = "start rec"
+    selectInputActionState("mic")
     inputMode = "mic"
 }
 
@@ -366,7 +446,9 @@ function startRecording() {
     isRecording = true
     stopRecording.classList.add("active")
 
-    document.getElementById("input-action").innerText = "stop rec"
+    // document.getElementById("input-action").innerText = "stop rec"
+
+    console.warn("start recording")
 
     navigator.mediaDevices
         .getUserMedia({ audio: true })
@@ -396,13 +478,14 @@ function startRecording() {
 function endRecording() {
     if (!isRecording)
         return
+    
     isRecording = false
     stopRecording.classList.remove("active")
 
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
         mediaRecorder.stop()
 
-        document.getElementById("input-action").innerText = "loading"
+        selectInputActionState("loading")
     }
 }
 
@@ -414,6 +497,11 @@ async function sendAudioDataToServer(audioBlob) {
 
     const myHeaders = new Headers();
     myHeaders.append("writepermissionpassword", writePermissionPassword)
+
+    console.warn("stop recording")
+
+    inputMode = "loading"
+    selectInputActionState("loading")
 
     let result  = await fetch(url + "api/" + sessionId + "/new-chat/chat-" + selectedAuthor, {
         method: 'post',
@@ -428,7 +516,14 @@ async function sendAudioDataToServer(audioBlob) {
     } catch (error) {
         console.log(result)
     }
+
+    inputMode = textInput.value ? "send" : "mic"
+    selectInputActionState(textInput.value ? "send" : "mic")
 }
+
+
+
+
 
 
 chatAuthors[0].button.click()

@@ -185,17 +185,33 @@ body {
 #input-action {
     width: 50px;
     height: 50px;
-    background-color: white;
+
+    border-color: #ffffff31;
+    border-style: solid;
+    border-width: 0.01px;
+
+    background-color: rgb(51, 51, 61);
     border-radius: 20px;
     margin-left: 5px;
 
-
-    color: black;
     display: flex;
     justify-content: center;
     align-items: center;
 
     cursor: pointer;
+}
+
+#input-action-img.loading {
+    height: 40px;
+    opacity: 1;
+}
+#input-action-img.send {
+    height: 28px;
+    opacity: 0.7;
+}
+#input-action-img.mic {
+    height: 28px;
+    opacity: 0.7;
 }
 
 #text-input {
@@ -204,7 +220,58 @@ body {
     height: 50px;
     border-radius: 20px;
     margin-right: 5px;
+
+    padding: 0 20px;
+
+    border-color: #ffffff31;
+    border-style: solid;
+    border-width: 0.01px;
+
+    background-color: rgb(51, 51, 61);
+
+    color: rgba(255, 255, 255, 0.905);
+
+    transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), margin-right 0.5s cubic-bezier(0.76, 0.59, 0, 1), border-width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 0.5s cubic-bezier(0.76, 0.59, 0, 1);
 }
+
+#text-input.hide {
+    width: 0;
+    margin-right: 0;
+    padding: 0 0;
+    border-width: 0;
+}
+
+#text-input:focus {
+    outline: none;
+}
+
+#audio-input {
+    width: 0;
+    max-width: 550px;
+    height: 50px;
+    border-radius: 20px;
+    margin-right: 0;
+
+    padding: 0 0;
+
+    border-color: #ffffff31;
+    border-style: solid;
+    border-width: 0;
+
+    background-color: rgb(51, 51, 61);
+
+    color: rgba(255, 255, 255, 0.905);
+
+    transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), margin-right 0.5s cubic-bezier(0.76, 0.59, 0, 1), border-width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 0.5s cubic-bezier(0.76, 0.59, 0, 1);
+}
+
+#audio-input.show {
+    width: 70%;
+    margin-right: 5px;
+    border-width: 0.01px;
+    padding: 0 20px;
+}
+
 
 #stop-recording-audio-input {
     position: absolute;

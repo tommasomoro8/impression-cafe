@@ -25,7 +25,7 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp, writePer
                         </div>
                         <div class="chat-button-right">
                             <div class="chat-button-name">Claude Monet</div>
-                            <div class="chat-button-preview">Ultimo messaggio ora</div>
+                            <div class="chat-button-preview"></div>
                         </div>
                     </div>
                     <div class="chat-button" id="chat-button-degas">
@@ -34,16 +34,25 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp, writePer
                         </div>
                         <div class="chat-button-right">
                             <div class="chat-button-name">Edgar Degas</div>
-                            <div class="chat-button-preview">Ultimo messaggio 1h fa</div>
+                            <div class="chat-button-preview"></div>
                         </div>
                     </div>
-                    <div class="chat-button" id="chat-button-seurat">
+                    <div class="chat-button" id="chat-button-renoir">
                         <div class="chat-button-left">
-                            <img class="chat-button-img" src="${process.env.URL}chat/img/georges_seurat.jpeg"/>
+                            <img class="chat-button-img" src="${process.env.URL}chat/img/pierre_auguste_renoir.jpeg"/>
                         </div>
                         <div class="chat-button-right">
-                            <div class="chat-button-name">Georges Seurat</div>
-                            <div class="chat-button-preview">Nessun messaggio</div>
+                            <div class="chat-button-name">Pierre-Auguste Renoir</div>
+                            <div class="chat-button-preview"></div>
+                        </div>
+                    </div>
+                    <div class="chat-button" id="chat-button-manet">
+                        <div class="chat-button-left">
+                            <img class="chat-button-img" src="${process.env.URL}chat/img/edouard_manet.jpeg"/>
+                        </div>
+                        <div class="chat-button-right">
+                            <div class="chat-button-name">Édouard Manet</div>
+                            <div class="chat-button-preview"></div>
                         </div>
                     </div>
                 </div>
@@ -59,11 +68,15 @@ module.exports = (sessionId = "", chats = {}, sessionCreationTimestamp, writePer
         <div id="right-container">
             <div class="chat-container active" id="chat-monet"></div>
             <div class="chat-container" id="chat-degas"></div>
-            <div class="chat-container" id="chat-seurat"></div>
+            <div class="chat-container" id="chat-renoir"></div>
+            <div class="chat-container" id="chat-manet"></div>
 
             <div id="chat-container-input">
-                <input type="text" id="text-input"/>
-                <div id="input-action">mic</div>
+                <input type="text" id="text-input" placeholder="Scrivi un messaggio..."/>
+                <div id="audio-input"></div>
+                <div id="input-action">
+                    <img id="input-action-img" class="mic" src="${process.env.URL}chat/img/mic.png" />
+                </div>
             </div>
         </div>
     </div>

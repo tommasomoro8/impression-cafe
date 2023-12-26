@@ -66,10 +66,10 @@ module.exports = () => {
                     <div id="chat-button-order">
                         <div class="chat-button ">
                             <div class="chat-button-left">
-                                <img class="chat-button-img" src="${process.env.URL}chat/img/georges_seurat.jpeg"/>
+                                <img class="chat-button-img" src="${process.env.URL}chat/img/edouard_manet.jpeg"/>
                             </div>
                             <div class="chat-button-right">
-                                <div class="chat-button-name">Georges Seurat</div>
+                                <div class="chat-button-name">Édouard Manet</div>
                                 <div class="chat-button-preview">Nessun messaggio</div>
                             </div>
                         </div>
