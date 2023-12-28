@@ -310,15 +310,16 @@ function selectInputActionState(mode) {
 
 function openAudioModal(open = true) {
     if (open) {
-        document.getElementById("audio-input").classList.add("show")
-        document.getElementById("text-input").classList.add("hide")
+        // document.getElementById("audio-input").classList.add("show")
+        // document.getElementById("text-input").classList.add("hide")
+        document.getElementById("input-action").classList.add("recording")
     } else {
-        document.getElementById("audio-input").classList.remove("show")
-        document.getElementById("text-input").classList.remove("hide")
+        // document.getElementById("audio-input").classList.remove("show")
+        // document.getElementById("text-input").classList.remove("hide")
+        document.getElementById("input-action").classList.remove("recording")
     }
 }
 
-openAudioModal()
 
 
 
@@ -441,14 +442,17 @@ function sendToMic() {
 let mediaRecorder
 let audioChunks = []
 
+let startRecordingTimestamp = 0
+
 
 function startRecording() {
     isRecording = true
     stopRecording.classList.add("active")
 
-    // document.getElementById("input-action").innerText = "stop rec"
+    openAudioModal()
 
     console.warn("start recording")
+    startRecordingTimestamp = Date.now()
 
     navigator.mediaDevices
         .getUserMedia({ audio: true })
@@ -462,6 +466,8 @@ function startRecording() {
 
             mediaRecorder.onstop = async () => {
                 const audioBlob = new Blob(audioChunks, { type: "audio/wav" })
+
+                console.log(audioChunks[0])
 
                 sendAudioDataToServer(audioBlob)
 
@@ -499,6 +505,13 @@ async function sendAudioDataToServer(audioBlob) {
     myHeaders.append("writepermissionpassword", writePermissionPassword)
 
     console.warn("stop recording")
+    openAudioModal(false)
+
+    if (Date.now() - startRecordingTimestamp < 1000 || Date.now() - startRecordingTimestamp > 60000) {
+        inputMode = textInput.value ? "send" : "mic"
+        selectInputActionState(textInput.value ? "send" : "mic")
+        return
+    }
 
     inputMode = "loading"
     selectInputActionState("loading")

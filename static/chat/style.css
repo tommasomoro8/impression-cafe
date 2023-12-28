@@ -165,21 +165,24 @@ body {
 }
 
 #chat-container-input {
-   
+    display: flex;
+
     width: calc(100% - 20px);
     height: 100px;
 
     margin: 0 10px;
 
-    display: none;
 
     justify-content: center;
     align-items: center;
 
+    transform: translateY(100px);
+    transition: transform 1s cubic-bezier(0.76, 0.59, 0, 1);
+
 }
 
 #chat-container-input.chatting-active {
-    display: flex;
+    transform: translateY(0);
 }
 
 #input-action {
@@ -192,13 +195,42 @@ body {
 
     background-color: rgb(51, 51, 61);
     border-radius: 20px;
-    margin-left: 5px;
+    margin-left: 10px;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     cursor: pointer;
+
+    transition: background-color 0.2s linear;
+}
+
+@-webkit-keyframes scale-up-center {
+    0% {
+      -webkit-transform: scale(1);
+              transform: scale(1);
+    }
+    100% {
+      -webkit-transform: scale(1.1);
+              transform: scale(1.1);
+    }
+}
+@keyframes scale-up-center {
+    0% {
+      -webkit-transform: scale(1);
+              transform: scale(1);
+    }
+    100% {
+      -webkit-transform: scale(1.1);
+              transform: scale(1.1);
+    }
+}
+
+#input-action.recording {
+    -webkit-animation: scale-up-center 0.7s cubic-bezier(0.645, 0.045, 0.355, 1.000) infinite alternate both;
+    animation: scale-up-center 0.7s cubic-bezier(0.645, 0.045, 0.355, 1.000) infinite alternate both;
+    background-color: rgb(191, 50, 50);
 }
 
 #input-action-img.loading {
@@ -219,7 +251,6 @@ body {
     max-width: 550px;
     height: 50px;
     border-radius: 20px;
-    margin-right: 5px;
 
     padding: 0 20px;
 
@@ -231,26 +262,25 @@ body {
 
     color: rgba(255, 255, 255, 0.905);
 
-    transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), margin-right 0.5s cubic-bezier(0.76, 0.59, 0, 1), border-width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 0.5s cubic-bezier(0.76, 0.59, 0, 1);
+    /* transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 50ms linear 200ms; */
 }
 
-#text-input.hide {
+/* #text-input.hide {
     width: 0;
-    margin-right: 0;
+    
     padding: 0 0;
     border-width: 0;
-}
+} */
 
 #text-input:focus {
     outline: none;
 }
 
-#audio-input {
+/* #audio-input {
     width: 0;
     max-width: 550px;
     height: 50px;
     border-radius: 20px;
-    margin-right: 0;
 
     padding: 0 0;
 
@@ -263,14 +293,16 @@ body {
     color: rgba(255, 255, 255, 0.905);
 
     transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), margin-right 0.5s cubic-bezier(0.76, 0.59, 0, 1), border-width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 0.5s cubic-bezier(0.76, 0.59, 0, 1);
+    transition: width 0.5s cubic-bezier(0.76, 0.59, 0, 1), padding 50ms linear 200ms;
+    border-width: 0.01px;
 }
 
 #audio-input.show {
     width: 70%;
-    margin-right: 5px;
+
     border-width: 0.01px;
     padding: 0 20px;
-}
+} */
 
 
 #stop-recording-audio-input {
