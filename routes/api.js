@@ -377,6 +377,8 @@ module.exports = io => {
 
             if (chunk.choices[0].finish_reason === "stop" || ((text.includes(".") || text.includes("!") || text.includes("?")) && string.length > 6 ) ) {
                 audioLenght++
+                const audioOrderInThisLoop = audioOrder
+                audioOrder++
 
                 textToSpeechClient.synthesizeSpeech({
                     input: {
@@ -391,8 +393,8 @@ module.exports = io => {
                         pitch: authors[authorIndex].voicePitch,
                         speakingRate: 1
                     },
-                }).then(async (textToSpeechresponse) => {
-                    audioContainer[audioOrder] = textToSpeechresponse[0].audioContent
+                }).then(async textToSpeechresponse => {
+                    audioContainer[audioOrderInThisLoop] = textToSpeechresponse[0].audioContent
 
                     // const writeFile = util.promisify(fs.writeFile)
                     // await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
@@ -415,11 +417,9 @@ module.exports = io => {
                         status: "output-audio-stream",
                         authorId,
                         binaryAudio: textToSpeechresponse[0].audioContent,
-                        audioOrder,
+                        audioOrder: audioOrderInThisLoop,
                         timestamp: parseInt(Date.now()/1000)
                     })
-
-                    audioOrder++
 
                     checkingAudioLenght()
 

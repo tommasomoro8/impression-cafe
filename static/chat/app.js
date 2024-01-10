@@ -591,3 +591,13 @@ socket.on("chat", chat => {
         }
     }
 })
+
+socket.on("chat", chat => {
+    if (chat.status == "output-audio-stream") {
+        console.warn(chat)
+    }
+
+    if (chat.status == "output-audio") {
+        console.warn(chat)
+    }
+})
