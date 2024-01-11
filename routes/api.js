@@ -321,9 +321,6 @@ module.exports = io => {
             if (arr.length !== audioOrder)
                 return
 
-            console.log("ora" + audioOrder + " " +  arr.length)
-
-            
             const buf = Buffer.concat(arr)
 
             const writeFile = util.promisify(fs.writeFile)
