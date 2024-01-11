@@ -308,18 +308,22 @@ module.exports = io => {
 
         const audioContainer = {}
         let audioOrder = 0
-        let audioLenght = 1
         let startCheckingAudioLenght = false
 
         const assistantAudioId = new Date().toISOString() + authorId + ".mp3"
 
-        async function checkingAudioLenght() {
-            if (!startCheckingAudioLenght || audioOrder !== audioLenght-1)
+        async function checkingAudioLenght() {   
+            if (!startCheckingAudioLenght)
                 return
 
-            startCheckingAudioLenght = false
-
             const arr = Object.values(audioContainer)
+
+            if (arr.length !== audioOrder)
+                return
+
+            console.log("ora" + audioOrder + " " +  arr.length)
+
+            
             const buf = Buffer.concat(arr)
 
             const writeFile = util.promisify(fs.writeFile)
@@ -376,7 +380,6 @@ module.exports = io => {
                 continue
 
             if (chunk.choices[0].finish_reason === "stop" || ((text.includes(".") || text.includes("!") || text.includes("?")) && string.length > 6 ) ) {
-                audioLenght++
                 const audioOrderInThisLoop = audioOrder
                 audioOrder++
 
@@ -396,23 +399,6 @@ module.exports = io => {
                 }).then(async textToSpeechresponse => {
                     audioContainer[audioOrderInThisLoop] = textToSpeechresponse[0].audioContent
 
-                    // const writeFile = util.promisify(fs.writeFile)
-                    // await writeFile(path.join(__dirname, '../audio', assistantAudioId), textToSpeechresponse[0].audioContent, 'binary') // se da errore controllare che la cartella /audio esista
-                
-                    
-                    // try {
-                    //     await bucket.upload(path.join(__dirname, '../audio', assistantAudioId), {
-                    //         destination: `sessions/${sessionId}/${assistantAudioId}`,
-                    //         metadata: {
-                    //             contentType: "audio/mp3"
-                    //         },
-                    //     })
-                    // } catch (error) {
-                    //     console.log(error)
-                    //     removeFileAudio(assistantAudioId)
-                    // }
-
-                    // removeFileAudio(assistantAudioId)
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "output-audio-stream",
                         authorId,
@@ -432,8 +418,6 @@ module.exports = io => {
         }
 
         startCheckingAudioLenght = true
-
-        await checkingAudioLenght()
 
         io.of("/chat").to(sessionId).emit('chat', {
             status: "end-output-stream",
