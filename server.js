@@ -1,7 +1,7 @@
 const path = require('path')
 const cookieParser = require("cookie-parser")
 const helmet = require('helmet')
-const rateLimit = require('express-rate-limit')
+const rateLimit = require('express-rate-limit') // use "node": "14.x" in glitch
 
 const express = require("express")
 const app = express()
