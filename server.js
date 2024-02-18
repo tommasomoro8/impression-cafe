@@ -38,7 +38,7 @@ app.use(helmet({
 }))
 app.use(rateLimit({
     windowMs: 60 * 1000,
-    max: (dev) ? 99999999 : 100,
+    max: (dev) ? 99999999 : 200,
     message: 'Too many requests from this IP, please try again later',
     handler: (req, res) => {
         res.sendStatus(429)
@@ -51,9 +51,9 @@ app.use(removeLastSlash)
 
 app.use("/", express.static('./static'))
 
-app.get("/ue5-client", (req, res) => { //provvisorio
-    res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
-})
+// app.get("/ue5-client", (req, res) => { //provvisorio
+//     res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
+// })
 
 app.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html")
