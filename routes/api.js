@@ -19,28 +19,40 @@ const authors = [
         name: "Claude Monet",
         voiceName: "it-IT-Neural2-C",
         voicePitch: 0,
-        systemContent: "Devi fare finta di essere Claude Monet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
+        voiceNameEn: "en-US-Casual-K",
+        voicePitchEn: 0,
+        systemContent: process.env.CHAT_MONET_SYSTEM_CONTENT,
+        systemContentEn: process.env.CHAT_MONET_SYSTEM_CONTENT_EN
     },
     {
         id: "chat-renoir",
         name: "Pierre-Auguste Renoir",
         voiceName: "it-IT-Neural2-C",
         voicePitch: -1.5,
-        systemContent: "Devi fare finta di essere Pierre-Auguste Renoir. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri."
+        voiceNameEn: "en-US-Casual-K",
+        voicePitchEn: 0,
+        systemContent: process.env.CHAT_RENOIR_SYSTEM_CONTENT,
+        systemContentEn: process.env.CHAT_RENOIR_SYSTEM_CONTENT_EN
     },
     {
         id: "chat-degas",
         name: "Edgar Degas",
         voiceName: "it-IT-Neural2-C",
         voicePitch: -2.3,
-        systemContent: "Devi fare finta di essere Edgar Degas. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri.."
+        voiceNameEn: "en-US-Casual-K",
+        voicePitchEn: 0,
+        systemContent: process.env.CHAT_DEGAS_SYSTEM_CONTENT,
+        systemContentEn: process.env.CHAT_DEGAS_SYSTEM_CONTENT_EN
     },
     {
         id: "chat-manet",
         name: "Édouard Manet",
         voiceName: "it-IT-Neural2-C",
         voicePitch: -1,
-        systemContent: "Devi fare finta di essere Édouard Manet. Devi parlare sempre in prima persona e non uscire mai dal personaggio. Ti verranno chieste domande sulle tua vita e le tue opere, rispondi come se fosse un discorso a voce tra te e l'utente. Quando ti vengono chieste domande su argomenti non inerenti all'autore, devi dire che non sai rispondere. Usa risposte brevi, usando al massimo 50 o 60 caratteri.."
+        voiceNameEn: "en-US-Casual-K",
+        voicePitchEn: 0,
+        systemContent: process.env.CHAT_MANET_SYSTEM_CONTENT,
+        systemContentEn: process.env.CHAT_MANET_SYSTEM_CONTENT_EN
     }
 ]
 const authorsLength = authors.length
@@ -65,17 +77,24 @@ function isAuthorValid(author) {
 
 
 router.post("/new-session", async (req, res) => {
+    let language = "it"
+
+    if (req.query["lang"] === "en")
+        language = "en"
+
     const writePermissionPassword = makePassword(30)
 
     const response = await db.collection("sessions").add({
         timestamp: parseInt(Date.now()/1000),
-        writePermissionPassword
+        writePermissionPassword,
+        language
     })
 
     res.send({
         status: "done",
         sessionId: response.id,
-        writePermissionPassword
+        writePermissionPassword,
+        language
     })
 
     db.collection("check-empty-sessions").doc(response.id).set({
@@ -119,19 +138,6 @@ function removeFileAudio(filename, inputText) {
 }
 
 module.exports = io => {
-    // router.get("/:id", async (req, res) => {
-    //     io.of("/chat").to("r8FB6lOuZOtRc3lFMDDY").emit('chat', {
-    //         status: "output-audio-stream",
-    //         authorId: "authorId",
-    //         binaryAudio: req.params.id,
-    //         audioOrder: req.params.id,
-    //         timestamp: parseInt(Date.now()/1000)
-    //     })
-
-    //     res.sendStatus(200)
-        
-    // })
-    
     router.post("/:sessionId/new-chat/:authorId", upload.single("audio"), async (req, res) => {
         const sessionId = req.params.sessionId
         const authorId = req.params.authorId
@@ -185,6 +191,11 @@ module.exports = io => {
             return res.status(420).send("a chat is already in the process of creation")
         } else
             blockedSessions.push(sessionId)
+
+        //lingua
+        let language = "it"
+        if (check1.data()["language"] === "en")
+            language = "en"
     
 
     // --- transcription level ---
@@ -197,7 +208,7 @@ module.exports = io => {
                 transcription = await openai.audio.transcriptions.create({
                     file: fs.createReadStream(path.join(__dirname, '../audio', req.file.filename)),
                     model: "whisper-1",
-                    language: "it"
+                    language
                 })
             } catch (error) {
                 console.log(error)
@@ -385,12 +396,12 @@ module.exports = io => {
                         text: string
                     },
                     voice: {
-                        languageCode: "it-IT",
-                        name: authors[authorIndex].voiceName
+                        languageCode: language == "en" ? "en-us" : "it-IT", 
+                        name: language == "en" ? authors[authorIndex].voiceNameEn : authors[authorIndex].voiceName
                     },
                     audioConfig: {
                         audioEncoding: 'MP3',
-                        pitch: authors[authorIndex].voicePitch,
+                        pitch: language == "en" ? authors[authorIndex].voicePitchEn : authors[authorIndex].voicePitch,
                         speakingRate: 1
                     },
                 }).then(async textToSpeechresponse => {

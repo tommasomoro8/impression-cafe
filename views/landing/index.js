@@ -1,4 +1,4 @@
-module.exports = () => {
+module.exports = (language) => {
     return /* html */`
 <html lang="it">
 <!DOCTYPE html>
@@ -24,7 +24,7 @@ module.exports = () => {
                     <div id="title">ImpressionCafé</div>
                 </div>
                 <div id="actions-top">
-                    <div id="chat-now">Nuova chat</div>
+                    <div id="chat-now">${language == "it" ? "Nuova chat" : "New chat"}</div>
                     <div id="view-chat">
                         <span id="view-chat-text">Assisti a una chat</span>
                     </div>
@@ -88,6 +88,7 @@ module.exports = () => {
     </div>
 
     <div class="hidden" id="url">${process.env.URL}</div>
+    <div class="hidden" id="language">${language}</div>
     
     <script src="/landing/app.js"></script>
 </body>

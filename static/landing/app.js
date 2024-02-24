@@ -1,5 +1,5 @@
 const url = document.getElementById("url").innerText; document.getElementById("url").remove()
-
+const language = document.getElementById("language").innerText; document.getElementById("language").remove()
 
 function openAssistSection(open = true) {
     if (open) document.getElementById("title-logo").classList.add("assist")
@@ -43,8 +43,9 @@ async function openNewChatSection() {
     }, 700)
 
     const dateBeforeApiCall = Date.now()
-
-    let result = await fetch("/api/new-session", { method: 'POST' })
+    
+    const fetchUrl = "/api/new-session" + (language == "en" ? "?lang=en" : "")
+    let result = await fetch(fetchUrl, { method: 'POST' })
 
     if (result.status !== 200)
         return console.error("openNewChatSection post error")

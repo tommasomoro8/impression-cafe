@@ -21,7 +21,7 @@ router.get("/:sessionId", async (req, res) => {
     if (!sessionTest.exists)
         return res.status(400).send("the session does not exist")
 
-    const { timestamp:sessionCreationTimestamp, writePermissionPassword:wwp } = sessionTest.data()
+    const { timestamp:sessionCreationTimestamp, writePermissionPassword:wwp, language } = sessionTest.data()
 
     if (writePermissionPassword && writePermissionPassword !== wwp)
         return res.status(403).send("wrong write permission password")
@@ -51,7 +51,7 @@ router.get("/:sessionId", async (req, res) => {
     }
     
     res.setHeader("Content-Type", "text/html")
-    res.send(chatPage(sessionId, chats, sessionCreationTimestamp, writePermissionPassword))
+    res.send(chatPage(sessionId, language, chats, sessionCreationTimestamp, writePermissionPassword))
 })
 
 module.exports = io => {

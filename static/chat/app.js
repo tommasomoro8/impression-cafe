@@ -2,6 +2,8 @@ const url = document.getElementById("url").innerText; document.getElementById("u
 const sessionId = document.getElementById("session-id").innerText; document.getElementById("session-id").remove()
 const chats = JSON.parse(document.getElementById("chats").innerText); document.getElementById("chats").remove()
 const writePermissionPassword = document.getElementById("wpp").innerText; document.getElementById("wpp").remove()
+const language = document.getElementById("language").innerText; document.getElementById("language").remove()
+
 
 let TEMPDATA
 

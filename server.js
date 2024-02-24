@@ -51,14 +51,32 @@ app.use(removeLastSlash)
 
 app.use("/", express.static('./static'))
 
-app.get("/ue5-client", (req, res) => { //provvisorio
-    res.sendFile(path.join(__dirname, "views", "provvisorio", 'index.html'))
+io.of("/").on('connection', async socket => {
+
+    console.log(socket.handshake.query)
+
+    socket.on('message', () => {
+        console.log("message")
+
+        io.emit("message", "hello")
+    })
+    
+    socket.on('disconnect', () => {
+        console.log("bye bye " + JSON.stringify(socket.handshake.query))
+    })
 })
 
 app.get("/", (req, res) => {
     res.setHeader("Content-Type", "text/html")
-    res.send(landingPage())
+    res.send(landingPage("it"))
 })
+
+app.get("/it", (req, res) => res.redirect("/"))
+app.get("/en", (req, res) => {
+    res.setHeader("Content-Type", "text/html")
+    res.send(landingPage("en"))
+})
+
 app.use("/api", api)
 app.use("/audio", audio)
 app.use("/chat", chat)
