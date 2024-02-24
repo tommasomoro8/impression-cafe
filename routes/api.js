@@ -332,6 +332,12 @@ module.exports = io => {
             if (arr.length !== audioOrder)
                 return
 
+            io.of("/chat").to(sessionId).emit('chat-unity', {
+                status: "output-audio-stream-ended",
+                authorId,
+                timestamp: parseInt(Date.now()/1000)
+            })
+
             const buf = Buffer.concat(arr)
 
             const writeFile = util.promisify(fs.writeFile)
@@ -407,12 +413,22 @@ module.exports = io => {
                 }).then(async textToSpeechresponse => {
                     audioContainer[audioOrderInThisLoop] = textToSpeechresponse[0].audioContent
 
+                    const outputAudioStreamTimestamp = parseInt(Date.now()/1000)
+
                     io.of("/chat").to(sessionId).emit('chat', {
                         status: "output-audio-stream",
                         authorId,
                         binaryAudio: textToSpeechresponse[0].audioContent,
                         audioOrder: audioOrderInThisLoop,
-                        timestamp: parseInt(Date.now()/1000)
+                        timestamp: outputAudioStreamTimestamp
+                    })
+
+                    io.of("/chat").to(sessionId).emit('chat-unity', {
+                        status: "output-audio-stream",
+                        authorId,
+                        binaryAudioData: textToSpeechresponse[0].audioContent.toString('base64'),
+                        audioOrder: audioOrderInThisLoop,
+                        timestamp: outputAudioStreamTimestamp
                     })
 
                     checkingAudioLenght()

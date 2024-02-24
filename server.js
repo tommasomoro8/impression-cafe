@@ -38,7 +38,7 @@ app.use(helmet({
 }))
 app.use(rateLimit({
     windowMs: 60 * 1000,
-    max: (dev) ? 99999999 : 100,
+    max: (dev) ? 99999999 : 200,
     message: 'Too many requests from this IP, please try again later',
     handler: (req, res) => {
         res.sendStatus(429)
