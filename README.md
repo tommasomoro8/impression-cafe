@@ -11,13 +11,13 @@ A VR reconstruction of the Café Guerbois where students talk out loud with four
 
 <!-- portfolio:summary
 ## The problem
-My art history teacher asked for a final-year project mixing AI chatbots, VR headsets and art history: rebuild the Café Guerbois, where the Impressionists met, and let students talk with the painters.
+My art history teacher asked for an interactive reconstruction of the Café Guerbois, where the Impressionists met, so that students could talk with the painters. With Ivan Lomaka, after our Cappella degli Scrovegni project, I brought together AI chatbots, VR headsets and art history to build it.
 
 ## The solution
 A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a question out loud and he answers by voice. A web page shows every conversation live. I built the server and the web pages; Ivan Lomaka built the VR client.
 
 ## Technical challenges
-- I send each sentence to text-to-speech while the model is still writing, so the painter starts talking sooner.
+- Waiting for the whole reply before turning it into speech was too slow, so I stream it and send each sentence to text-to-speech while the model is still writing.
 - Speech clips can come back out of order, so each one carries an index and the clients play them in sequence.
 - One Socket.IO room per session feeds both the headset and any browser watching.
 
@@ -35,18 +35,16 @@ Node.js, Express, Socket.IO, OpenAI API (Whisper, GPT-3.5), Google Cloud Text-to
 
 <!-- portfolio:start -->
 ## The problem
-Prof. Cristina Tranchese, my art history teacher at Liceo Duca degli Abruzzi in Treviso, asked for one last project in our final year. It had to bring together three things: AI chatbots, 3D with VR headsets, and art history.
+Prof. Cristina Tranchese, my art history teacher at Liceo Duca degli Abruzzi in Treviso, asked us for one last project in our final year: an interactive reconstruction of the Café Guerbois, the café where the Impressionist painters used to meet, so that students could talk with the painters instead of only reading about them.
 
-The idea was to rebuild the Café Guerbois, the café where the Impressionist painters used to meet, and to let students talk with the painters instead of only reading about them.
-
-I worked on it with [@IvanLomaka](https://github.com/ivanlomaka), the same team-mate and the same teacher as the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni) project.
+Ivan Lomaka ([@IvanLomaka](https://github.com/ivanlomaka)) and I had already worked with her on the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni) project. Building on that experience, we brought together AI chatbots, 3D with VR headsets and art history, and created ImpressionCafé.
 
 ## The solution
 You put on the headset and you are standing in the café. Four painters are there: Claude Monet, Pierre-Auguste Renoir, Edgar Degas and Édouard Manet. When you walk up to one, he turns towards you. You hold the controller trigger, ask your question out loud and release. He answers by voice, in character.
 
 Each painter is told to speak in the first person, to keep answers very short, and to say he can't answer when the question has nothing to do with his life and work.
 
-Everyone else can follow on a web page. Every session has a chat page that shows, live, the transcribed question, the answer while it is being written and the audio of both. The same page also works without a headset: opened with the session password, it lets you type or record a question.
+Everyone else can follow on a web page. Every session has a chat page that shows, live, the transcribed question, the answer while it is being written and the audio of both. The same page also works without a headset: opened directly from the website, it lets you type or record a question.
 
 The project is also a base for similar experiences with other artists or famous people. On the server a character is one entry in a list, with a voice and a system prompt.
 
@@ -64,14 +62,13 @@ This exchange is the one in the demo video.
 5. Text-to-Speech turns each sentence into an MP3 clip. Degas says it in the headset and the chat page plays it.
 
 ## Technical challenges
-- **Getting the painter to start talking sooner.** One question goes through three slow steps: transcription, text generation and speech synthesis. I stream the reply from the model and cut it at every `.`, `!` or `?`. Each sentence goes to Text-to-Speech at once, while the model keeps writing the next one.
+- **Getting the painter to start talking sooner.** One question goes through three slow steps: transcription, text generation and speech synthesis. At first I waited for the model to finish the whole reply, turned it into audio and only then sent it to the clients. The painter took too many seconds to answer and the conversation felt slow. So I switched to the streaming mode of the OpenAI chat API: I cut the reply at every `.`, `!` or `?` and send each sentence to Text-to-Speech at once. The first sentence reaches the clients over Socket.IO while the model is still writing, and by the time it has been played the next one is most likely ready.
 - **Keeping the audio in order.** The Text-to-Speech calls run in parallel and can finish in any order. Each clip carries an `audioOrder` index, and the clients play the clips in sequence. When every clip is back, the server joins them into one MP3 and stores it, so the answer can be played again when the page is reopened.
 - **Two very different clients on one stream.** The browser and Unity both join a Socket.IO room named after the session. The browser gets each clip as binary data on the `chat` event. Unity gets the same clip as a base64 string on a separate `chat-unity` event.
-- **Who can talk and who can only watch.** Creating a session returns a random 30-character write password. A question is accepted only with that password in a header; without it, the chat page is read-only. A lock per session rejects a second question while the first one is still being answered.
 
 ## What I learned
 - This was a really broad project. It taught me to work in a team with a sharp split of the parts: the server was mine, the Unity client was Ivan's.
-- How to build a more complex system whose parts live in separate environments and talk over an API and WebSockets. The website shows in real time the chat and the audio captured through the headset.
+- How to build a more complex system whose parts live in separate environments and talk over an API and WebSockets.
 
 ## Stack
 - **Server:** Node.js, Express, Socket.IO, Multer, Helmet, express-rate-limit, dotenv
@@ -92,7 +89,6 @@ This exchange is the one in the demo video.
 flowchart LR
   subgraph Clients
     VR["Unity VR client"]
-    Landing["Landing page<br>/"]
     ChatPage["Chat page<br>/chat/:sessionId"]
   end
   subgraph Server["Express and Socket.IO server"]
@@ -106,8 +102,6 @@ flowchart LR
   FS[("Firestore")]
   ST[("Firebase Storage")]
 
-  Landing -->|"POST /api/new-session"| API
-  Landing -->|"opens with session id and password"| ChatPage
   VR -->|"POST /api/new-session"| API
   VR -->|"POST question as WAV"| API
   ChatPage -->|"POST question as text or audio"| API
@@ -124,12 +118,12 @@ flowchart LR
   AudioRoute -->|"redirect to download URL"| ST
 ```
 
-- **One request per turn.** `POST /api/:sessionId/new-chat/:authorId` does the whole turn: checks, transcription, reply, speech, saving. Its HTTP response arrives only at the end. Everything the user sees or hears before that travels on Socket.IO.
+- **One request per turn.** `POST /api/:sessionId/new-chat/:authorId` does the whole turn: checks, transcription, reply, speech, saving. Its HTTP response arrives once the reply text is complete and saved, while the last speech clips may still be on their way. The transcript, the text as it is written and every audio clip travel on Socket.IO.
 - **A session is a Firestore document.** Under it there is one collection per painter, with the system prompt, the questions and the answers in order. The audio files sit in Storage under `sessions/<sessionId>/`.
 - **Characters are data.** `routes/api.js` keeps a list with each painter's id, voice, pitch and system prompt. The prompts come from environment variables.
 - **Pages without a framework.** The landing and the chat page are template strings rendered by Express, with plain CSS and JavaScript in `static/`. There is no build step.
 - **Temporary files.** Uploaded and generated audio is written to `audio/`, uploaded to Storage and then deleted from disk.
-- **Cleaning up.** A session that still has no messages one hour after it was created is deleted. The check runs every 30 minutes.
+- **Cleaning up.** A session is created every time the Unity scene starts or someone clicks "Nuova chat", even if nobody then asks anything. During development that meant a new session at almost every run of the scene. A session that still has no messages one hour after it was created is deleted, and the check runs every 30 minutes.
 
 ## Running locally
 
@@ -194,34 +188,28 @@ impression-cafe/
 ## Known limitations and future work
 
 **Limitations**
-- There is no live demo. The Glitch deploy is offline, and running it needs a VR headset and paid AI services.
-- The server does not start without every credential. With credentials that Firebase rejects, it starts and then crashes at the first database call.
-- English sessions get English transcription and an English voice, but the painter still receives the Italian system prompt: `systemContentEn` is defined and never read.
-- The painter's memory stops growing. The history query takes the first 10 messages of the chat instead of the last 10, so after five exchanges the model no longer sees the most recent ones.
-- If reading the history fails, the handler answers 500 and keeps running. It then throws, and the session stays locked until the server restarts.
-- The lock that blocks two questions at once lives in memory, so it only works with a single server instance.
-- On the landing page the "Assisti a una chat" button does nothing, the credits still contain placeholder text, and only one button is translated in the English version.
-- The write password travels in the page URL and is generated with `Math.random()`.
-- `trust proxy` is set to `true`, so the rate limit can be bypassed with a forged `X-Forwarded-For` header.
-- In the VR client the session id only appears in the Unity console, so a spectator cannot easily find the chat page of a running session.
-- In the VR client, when speech clips arrive out of order, one can be played twice and another skipped.
+- **No live demo.** The Glitch deploy is offline. Running the project needs a VR headset, an OpenAI key, Google Cloud Text-to-Speech and a Firebase project, and the server does not start without all of them.
+- **One long handler for a whole turn.** Transcription, reply, speech and saving live in a single route with little error handling, so some failures leave a session blocked until the server restarts. The lock that stops two questions at once lives in memory, so the server cannot run on more than one instance.
+- **Short memory.** Only a fixed slice of the history reaches the model, and it is the oldest one: after a few exchanges the painter no longer sees what was said most recently.
+- **The English version is half done.** Transcription and voices switch to English, but the painters' prompts and most of the landing page stay in Italian.
+- **Watching a session is hard.** The "Assisti a una chat" button on the landing page does nothing, and the VR client never shows its session id, so a spectator needs the full link from whoever started it.
+- **Basic security.** Writing to a session rests on a single password that travels in the page URL. That is enough for a classroom, not for a public service.
+- **Characters live in the code.** Adding a painter means editing the server and deploying it again.
 
 **Future work**
 <!-- TODO: Tommaso to confirm or replace these points -->
 - **Fix the memory.** I would read the last messages in descending order and always put the system prompt first, taken from the configuration instead of from the database. The painter would remember the recent turns, and a prompt change would also reach old sessions.
 - **Finish the English version.** I would pick `systemContentEn` when the session language is English and translate the landing page, so that an English session is English from start to end.
 - **Release the lock in every case.** I would wrap the turn in `try`/`finally` so that an error can never leave a session blocked.
+- **Create the session at the first question.** Today a session is opened as soon as the scene starts, and most of them stay empty until the clean-up deletes them. Creating it with the first question would avoid that work entirely.
 - **Make "watch a chat" real.** I would show a short session code inside the headset and add a field for it on the landing page. Today a spectator needs the full URL.
 - **Move the characters out of the code.** I would store painters, voices and prompts in Firestore. A teacher could then add a new historical figure without touching the server, which is what the project was meant to be a base for.
 
 ## Credits and license
 - **Tommaso Moro:** server, API and web pages (landing and live chat).
-- **Ivan Lomaka ([@IvanLomaka](https://github.com/ivanlomaka)):** VR client in Unity.
+- **Ivan Lomaka:** VR client in Unity.
 - **Andrea Luca Bristot:** 3D model of the café.
 - **Prof. Cristina Tranchese:** art history teacher, she proposed the project and supervised it.
-- Avatars: [Ready Player Me](https://readyplayer.me/).
-- Unity packages and plugins: [SocketIOUnity](https://github.com/itisnajim/SocketIOUnity), [glTFast](https://github.com/atteneder/glTFast), [Ready Player Me Core SDK](https://github.com/readyplayerme/rpm-unity-sdk-core), Oculus LipSync, XR Interaction Toolkit, TextMesh Pro.
-- Server libraries: [Express](https://expressjs.com/), [Socket.IO](https://socket.io/), [Multer](https://github.com/expressjs/multer), [Helmet](https://helmetjs.github.io/), [express-rate-limit](https://github.com/express-rate-limit/express-rate-limit), [openai](https://github.com/openai/openai-node), [@google-cloud/text-to-speech](https://github.com/googleapis/google-cloud-node), [firebase-admin](https://firebase.google.com/docs/admin/setup).
 
 The server and the web pages in `src/server/` are released under the [MIT License](LICENSE). The Unity project in `src/unityVR/` is excluded: the VR client belongs to Ivan Lomaka, the 3D model of the café to Andrea Luca Bristot, and the third-party packages keep their own licenses.
 
