@@ -226,5 +226,4 @@ impression-cafe/
 
 ---
 
-Created by Tommaso Moro and Ivan Lomaka in 2024.
-<!-- TODO: add the month in which the project ended -->
+Created by Tommaso Moro and Ivan Lomaka in May 2024.

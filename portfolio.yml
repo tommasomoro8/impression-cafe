@@ -1,8 +1,8 @@
 title: "ImpressionCafé"
-slug: "impressioncafe"   # lowercase, hyphens; used in the portfolio URL, never change it once published
+slug: "impression-cafe"  # lowercase, hyphens; used in the portfolio URL, never change it once published
 category: "school"       # uni | school | pers | comm
 year: 2024
-period: ""               # TODO: e.g. "Feb 2024 – May 2024"
+period: "Oct 2023 – May 2024"
 status: "completed"      # completed | in progress | archived
 role: "team of 3, server and web"
 cover: docs/screenshots/cover.png
