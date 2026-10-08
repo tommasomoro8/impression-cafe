@@ -1,6 +1,6 @@
 # ImpressionCafé
 
-A VR reconstruction of the Café Guerbois where students talk out loud with four Impressionist painters, each played by an AI chatbot.
+A VR reconstruction of the Café Guerbois where students talk to four Impressionist painters, each played by an AI chatbot.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e)
