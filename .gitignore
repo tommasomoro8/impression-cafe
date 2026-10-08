@@ -1,0 +1,28 @@
+# Unity: cache e file generati (Unity li ricrea da solo)
+src/unityVR/[Ll]ibrary/
+src/unityVR/[Tt]emp/
+src/unityVR/[Oo]bj/
+src/unityVR/[Bb]uild/
+src/unityVR/[Bb]uilds/
+src/unityVR/[Ll]ogs/
+src/unityVR/[Uu]ser[Ss]ettings/
+src/unityVR/.vscode/
+src/unityVR/*.csproj
+src/unityVR/*.sln
+*.apk
+*.aab
+
+# Node
+node_modules/
+.env
+
+# Video (troppo pesanti per git)
+docs/*.mp4
+docs/*.mkv
+
+# macOS
+.DS_Store
+
+# Ultima domanda registrata dal visore (file generato a runtime)
+src/unityVR/Assets/call.wav
+src/unityVR/Assets/call.wav.meta

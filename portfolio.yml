@@ -1,0 +1,26 @@
+title: "ImpressionCafé"
+slug: "impressioncafe"   # lowercase, hyphens; used in the portfolio URL, never change it once published
+category: "school"       # uni | school | pers | comm
+year: 2024
+period: ""               # TODO: e.g. "Feb 2024 – May 2024"
+status: "completed"      # completed | in progress | archived
+role: "team of 3, server and web"
+cover: docs/screenshots/cover.png
+demo: "https://drive.google.com/file/d/1PR18X5HgczpVtX4VEUkz5tyVjIF7tvHU/view"
+note: "The link is a video: the live version needs a VR headset and paid AI services."
+press:
+  - title: "Didattica interattiva: al Duca degli Abruzzi si studia nel metaverso"
+    source: "Antenna Tre"
+    kind: "article"      # article | contest | event | award
+    date: "2024-06-09"
+    url: "https://antennatre.medianordest.it/116968/treviso-didattica-interattiva-al-duca-degli-abruzzi-si-studia-nel-metaverso/"
+  - title: "Il Metaverso del Café Guerbois"
+    source: "Repubblica Scuola"
+    kind: "article"
+    date: "2025-02-14"
+    url: "https://scuola.repubblica.it/post/64333/teacher/show"
+screenshots:             # gallery shown under the text on the portfolio, in this order
+  - path: docs/screenshots/cover.png
+    alt: "A frame from the demo video: Edgar Degas seen through the headset, with an inset of a student wearing it and the live chat page showing the transcribed question and the answer"
+  - path: docs/screenshots/unity-overview.png
+    alt: "The Unity editor with the café scene: the painters and the other customers around the tables, and below it the first-person view from the headset"
