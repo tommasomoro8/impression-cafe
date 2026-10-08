@@ -4,6 +4,7 @@ A VR reconstruction of the Café Guerbois where students talk out loud with four
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e)
+![Engine](https://img.shields.io/badge/engine-Unity-222c37)
 
 [![A frame from the demo video: Edgar Degas seen through the headset, with an inset of a student wearing it and the live chat page showing the transcribed question and the answer](docs/screenshots/cover.png)](https://drive.google.com/file/d/1PR18X5HgczpVtX4VEUkz5tyVjIF7tvHU/view)
 
@@ -11,10 +12,10 @@ A VR reconstruction of the Café Guerbois where students talk out loud with four
 
 <!-- portfolio:summary
 ## The problem
-My art history teacher asked for an interactive reconstruction of the Café Guerbois, where the Impressionists met, so that students could talk with the painters. With Ivan Lomaka, after our Cappella degli Scrovegni project, I brought together AI chatbots, VR headsets and art history to build it.
+My art history teacher asked for an interactive reconstruction of the Café Guerbois, where the Impressionist painters used to meet, so that students could talk with them instead of only reading about them. I teamed up again with Ivan Lomaka and, drawing on our Cappella degli Scrovegni 360° project, we brought together AI chatbots, VR headsets and art history to build it.
 
 ## The solution
-A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a question out loud and he answers by voice. A web page shows every conversation live. I built the server and the web pages; Ivan Lomaka built the VR client.
+A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a question out loud and he answers by voice, in character. A web page follows every conversation live and, without a headset, works as a simple chat with the painters. I built the server and the web pages, Ivan built the VR client, Andrea Luca Bristot modelled the café.
 
 ## Technical challenges
 - Waiting for the whole reply before turning it into speech was too slow, so I stream it and send each sentence to text-to-speech while the model is still writing.
