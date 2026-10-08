@@ -24,7 +24,9 @@ A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a questi
 
 ## What I learned
 - Working in a team with a sharp split: the server was mine, Unity was Ivan's.
-- Building a system whose parts live in separate environments and talk over an API and WebSockets.
+- Building a system whose parts live in separate environments, talk over an API and WebSockets and serve different kinds of clients at once.
+- Working with the OpenAI APIs (chat models and Whisper) and Google Cloud Text-to-Speech.
+- Treating response time as a requirement, not only whether the system works.
 
 ## Stack
 Node.js, Express, Socket.IO, OpenAI API (Whisper, GPT-3.5), Google Cloud Text-to-Speech, Firebase (Firestore, Storage), Unity, C#
@@ -69,7 +71,9 @@ This exchange is the one in the demo video.
 
 ## What I learned
 - This was a really broad project. It taught me to work in a team with a sharp split of the parts: the server was mine, the Unity client was Ivan's.
-- How to build a more complex system whose parts live in separate environments and talk over an API and WebSockets.
+- How to build a more complex system whose parts live in separate environments, talk over an API and WebSockets, and serve different kinds of clients at the same time: a VR headset and any number of browsers.
+- How to work with external AI services: the OpenAI chat models and Whisper for speech recognition, and Google Cloud Text-to-Speech.
+- To treat time as a requirement, alongside correctness. It was not enough for the painter to give the right answer: he had to answer fast enough for it to feel like a real conversation.
 
 ## Stack
 - **Server:** Node.js, Express, Socket.IO, Multer, Helmet, express-rate-limit, dotenv
