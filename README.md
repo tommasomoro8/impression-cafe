@@ -37,7 +37,7 @@ Node.js, Express, Socket.IO, OpenAI API (Whisper, GPT-3.5), Google Cloud Text-to
 ## The problem
 Prof. Cristina Tranchese, my art history teacher at Liceo Duca degli Abruzzi in Treviso, asked us for one last project in our final year: an interactive reconstruction of the Café Guerbois, the café where the Impressionist painters used to meet, so that students could talk with the painters instead of only reading about them.
 
-Ivan Lomaka ([@IvanLomaka](https://github.com/ivanlomaka)) and I had already worked with her on the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni) project. Building on that experience, we brought together AI chatbots, 3D with VR headsets and art history, and created ImpressionCafé.
+I had already worked with her, together with Ivan Lomaka ([@IvanLomaka](https://github.com/ivanlomaka)), on the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni) project. Building on that experience, we brought together AI chatbots, 3D with VR headsets and art history, and created ImpressionCafé.
 
 ## The solution
 You put on the headset and you are standing in the café. Four painters are there: Claude Monet, Pierre-Auguste Renoir, Edgar Degas and Édouard Manet. When you walk up to one, he turns towards you. You hold the controller trigger, ask your question out loud and release. He answers by voice, in character.
