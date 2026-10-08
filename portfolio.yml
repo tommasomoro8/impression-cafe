@@ -4,7 +4,7 @@ category: "school"       # uni | school | pers | comm
 year: 2024
 period: "Oct 2023 – May 2024"
 status: "completed"      # completed | in progress | archived
-role: "team of 3, server and web"
+role: "team of 2, backend"
 cover: docs/screenshots/cover.png
 demo: "https://drive.google.com/file/d/1PR18X5HgczpVtX4VEUkz5tyVjIF7tvHU/view"
 note: "The link is a video: the live version needs a VR headset and paid AI services."
