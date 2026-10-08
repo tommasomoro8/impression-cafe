@@ -37,18 +37,18 @@ Node.js, Express, Socket.IO, OpenAI API (Whisper, GPT-3.5), Google Cloud Text-to
 ## The problem
 Prof. Cristina Tranchese, my art history teacher at Liceo Duca degli Abruzzi in Treviso, asked us for one last project in our final year: an interactive reconstruction of the Café Guerbois, the café where the Impressionist painters used to meet, so that students could talk with the painters instead of only reading about them.
 
-So I teamed up again with Ivan Lomaka ([@IvanLomaka](https://github.com/ivanlomaka)). Drawing on what we had learned building the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni), we brought together AI chatbots, 3D with VR headsets and art history, and created ImpressionCafé.
+So I teamed up again with [@IvanLomaka](https://github.com/ivanlomaka). Drawing on what we had learned building the [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni), we brought together AI chatbots, 3D with VR headsets and art history, and created ImpressionCafé.
 
 ## The solution
 You put on the headset and you are standing in the café. Four painters are there: Claude Monet, Pierre-Auguste Renoir, Edgar Degas and Édouard Manet. When you walk up to one, he turns towards you. You hold the controller trigger, ask your question out loud and release. He answers by voice, in character.
 
 Each painter is told to speak in the first person, to keep answers very short, and to say he can't answer when the question has nothing to do with his life and work.
 
-Everyone else can follow on a web page. Every session has a chat page that shows, live, the transcribed question, the answer while it is being written and the audio of both. The same page also works without a headset: opened directly from the website, it lets you type or record a question.
+Everyone else can follow on a web page. Every session has a chat page that shows, live, the transcribed question, the answer while it is being written and the audio of both. Without a headset, the same page also works as a simple chat: opened directly from the website, it lets you type or record a question to a painter and read and hear his answer, with no 3D café around you.
 
 The project is also a base for similar experiences with other artists or famous people. On the server a character is one entry in a list, with a voice and a system prompt.
 
-I built the server and the web pages. Ivan built the VR client in Unity. Andrea Luca Bristot modelled the café.
+I built the server and the web pages, Ivan built the VR client in Unity, Andrea Luca Bristot modelled the café.
 
 ![The Unity editor with the café scene: the painters and the other customers around the tables, and below it the first-person view from the headset](docs/screenshots/unity-overview.png)
 
@@ -88,42 +88,41 @@ This exchange is the one in the demo video.
 ```mermaid
 flowchart LR
   subgraph Clients
-    VR["Unity VR client"]
-    ChatPage["Chat page<br>/chat/:sessionId"]
+    VR["VR client<br>Unity"]
+    ChatPage["Chat page<br>browser"]
   end
-  subgraph Server["Express and Socket.IO server"]
-    API["/api<br>sessions and questions"]
-    Pages["/chat<br>page with the history"]
-    Room["Socket.IO room<br>one per session"]
-    AudioRoute["/audio<br>stored clips"]
+  subgraph Server["Node.js server"]
+    API["REST API<br>sessions and questions"]
+    Room["Socket.IO rooms<br>live updates"]
+    Pages["Web pages"]
+    AudioRoute["Stored audio"]
   end
-  OpenAI["OpenAI<br>Whisper and GPT-3.5"]
+  OpenAI["OpenAI<br>transcription and replies"]
   TTS["Google Cloud<br>Text-to-Speech"]
-  FS[("Firestore")]
-  ST[("Firebase Storage")]
+  FS[("Firestore<br>sessions and messages")]
+  ST[("Firebase Storage<br>audio files")]
 
-  VR -->|"POST /api/new-session"| API
-  VR -->|"POST question as WAV"| API
-  ChatPage -->|"POST question as text or audio"| API
-  API -->|"audio to transcribe, messages to complete"| OpenAI
-  API -->|"one sentence at a time"| TTS
-  API -->|"sessions and messages"| FS
-  API -->|"question and answer audio"| ST
-  API -->|"transcript, text chunks, audio clips"| Room
-  Room -->|"chat events"| ChatPage
-  Room -->|"chat-unity events"| VR
-  FS -->|"earlier messages"| Pages
-  Pages -->|"HTML"| ChatPage
-  ChatPage -->|"GET stored clip"| AudioRoute
-  AudioRoute -->|"redirect to download URL"| ST
+  VR -->|"questions"| API
+  ChatPage -->|"questions"| API
+  API --> OpenAI
+  API --> TTS
+  API --> FS
+  API --> ST
+  API -->|"answer as it is generated"| Room
+  Room --> VR
+  Room --> ChatPage
+  FS --> Pages
+  Pages -->|"chat history"| ChatPage
+  ST --> AudioRoute
+  AudioRoute -->|"past answers"| ChatPage
 ```
 
-- **One request per turn.** `POST /api/:sessionId/new-chat/:authorId` does the whole turn: checks, transcription, reply, speech, saving. Its HTTP response arrives once the reply text is complete and saved, while the last speech clips may still be on their way. The transcript, the text as it is written and every audio clip travel on Socket.IO.
-- **A session is a Firestore document.** Under it there is one collection per painter, with the system prompt, the questions and the answers in order. The audio files sit in Storage under `sessions/<sessionId>/`.
-- **Characters are data.** `routes/api.js` keeps a list with each painter's id, voice, pitch and system prompt. The prompts come from environment variables.
-- **Pages without a framework.** The landing and the chat page are template strings rendered by Express, with plain CSS and JavaScript in `static/`. There is no build step.
-- **Temporary files.** Uploaded and generated audio is written to `audio/`, uploaded to Storage and then deleted from disk.
-- **Cleaning up.** A session is created every time the Unity scene starts or someone clicks "Nuova chat", even if nobody then asks anything. During development that meant a new session at almost every run of the scene. A session that still has no messages one hour after it was created is deleted, and the check runs every 30 minutes.
+- **REST for actions, WebSockets for live updates.** Clients create sessions and send questions through the REST API. Everything that happens while a painter answers (the transcript, the text as it is written, the audio clips) is pushed through the Socket.IO room of the session to every client watching it.
+- **The server orchestrates, external services do the AI work.** OpenAI transcribes the question and writes the reply, Google Cloud turns it into speech. The server chains them and streams the result.
+- **A session is the shared unit.** A session holds one conversation per painter in Firestore, with its audio in Firebase Storage. The headset and any number of browsers can follow the same session.
+- **Characters are data.** Each painter is one entry in a list on the server, with a name, a voice and a system prompt.
+- **No build step.** The web pages are rendered by Express with plain HTML, CSS and JavaScript.
+- **Cleaning up.** A session is created every time the Unity scene starts, even if nobody then asks anything, so the server periodically deletes the sessions that stayed empty.
 
 ## Running locally
 
@@ -191,19 +190,12 @@ impression-cafe/
 - **No live demo.** The Glitch deploy is offline. Running the project needs a VR headset, an OpenAI key, Google Cloud Text-to-Speech and a Firebase project, and the server does not start without all of them.
 - **One long handler for a whole turn.** Transcription, reply, speech and saving live in a single route with little error handling, so some failures leave a session blocked until the server restarts. The lock that stops two questions at once lives in memory, so the server cannot run on more than one instance.
 - **Short memory.** Only a fixed slice of the history reaches the model, and it is the oldest one: after a few exchanges the painter no longer sees what was said most recently.
-- **The English version is half done.** Transcription and voices switch to English, but the painters' prompts and most of the landing page stay in Italian.
-- **Watching a session is hard.** The "Assisti a una chat" button on the landing page does nothing, and the VR client never shows its session id, so a spectator needs the full link from whoever started it.
-- **Basic security.** Writing to a session rests on a single password that travels in the page URL. That is enough for a classroom, not for a public service.
 - **Characters live in the code.** Adding a painter means editing the server and deploying it again.
 
 **Future work**
-<!-- TODO: Tommaso to confirm or replace these points -->
-- **Fix the memory.** I would read the last messages in descending order and always put the system prompt first, taken from the configuration instead of from the database. The painter would remember the recent turns, and a prompt change would also reach old sessions.
-- **Finish the English version.** I would pick `systemContentEn` when the session language is English and translate the landing page, so that an English session is English from start to end.
-- **Release the lock in every case.** I would wrap the turn in `try`/`finally` so that an error can never leave a session blocked.
-- **Create the session at the first question.** Today a session is opened as soon as the scene starts, and most of them stay empty until the clean-up deletes them. Creating it with the first question would avoid that work entirely.
-- **Make "watch a chat" real.** I would show a short session code inside the headset and add a field for it on the landing page. Today a spectator needs the full URL.
 - **Move the characters out of the code.** I would store painters, voices and prompts in Firestore. A teacher could then add a new historical figure without touching the server, which is what the project was meant to be a base for.
+- **Create the session at the first question.** Today a session is opened as soon as the scene starts, and most of them stay empty until the clean-up deletes them. Creating it with the first question would avoid that work entirely.
+- **Cleaner, more modular code.** Today the logic sits in a few very long files: the file with the whole question-to-answer turn is over 500 lines, and the chat page script almost 600. I would split them into small modules (transcription, reply, speech, storage) that are easier to read, test and change.
 
 ## Credits and license
 - **Tommaso Moro:** server, API and web pages (landing and live chat).
