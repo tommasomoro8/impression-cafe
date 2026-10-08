@@ -2,7 +2,7 @@
 
 A VR reconstruction of the Café Guerbois where students talk out loud with four Impressionist painters, each played by an AI chatbot.
 
-<!-- TODO: licence badge, once the licence is chosen -->
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e)
 
 [![A frame from the demo video: Edgar Degas seen through the headset, with an inset of a student wearing it and the live chat page showing the transcribed question and the answer](docs/screenshots/cover.png)](https://drive.google.com/file/d/1PR18X5HgczpVtX4VEUkz5tyVjIF7tvHU/view)
@@ -187,6 +187,7 @@ impression-cafe/
 │       └── ProjectSettings/
 ├── docs/screenshots/            ← images used in this README
 ├── README.md
+├── LICENSE                      ← MIT, for the server only
 └── portfolio.yml                ← metadata for my portfolio
 ```
 
@@ -222,7 +223,7 @@ impression-cafe/
 - Unity packages and plugins: [SocketIOUnity](https://github.com/itisnajim/SocketIOUnity), [glTFast](https://github.com/atteneder/glTFast), [Ready Player Me Core SDK](https://github.com/readyplayerme/rpm-unity-sdk-core), Oculus LipSync, XR Interaction Toolkit, TextMesh Pro.
 - Server libraries: [Express](https://expressjs.com/), [Socket.IO](https://socket.io/), [Multer](https://github.com/expressjs/multer), [Helmet](https://helmetjs.github.io/), [express-rate-limit](https://github.com/express-rate-limit/express-rate-limit), [openai](https://github.com/openai/openai-node), [@google-cloud/text-to-speech](https://github.com/googleapis/google-cloud-node), [firebase-admin](https://firebase.google.com/docs/admin/setup).
 
-<!-- TODO: licence sentence and LICENSE file, once the licence is chosen -->
+The server and the web pages in `src/server/` are released under the [MIT License](LICENSE). The Unity project in `src/unityVR/` is excluded: the VR client belongs to Ivan Lomaka, the 3D model of the café to Andrea Luca Bristot, and the third-party packages keep their own licenses.
 
 ---
 

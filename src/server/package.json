@@ -11,7 +11,7 @@
     "node": "18.x"
   },
   "author": "Tommaso Moro",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@google-cloud/text-to-speech": "^5.1.0",
     "cookie-parser": "^1.4.6",
