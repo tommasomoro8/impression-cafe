@@ -7,7 +7,7 @@ status: "completed"      # completed | in progress | archived
 role: "team of 2, backend"
 cover: docs/screenshots/cover.png
 demo: "https://drive.google.com/file/d/1PR18X5HgczpVtX4VEUkz5tyVjIF7tvHU/view"
-note: "The demo is a video, because the live version needs a VR headset and paid AI services."
+note: "The demo is a video. The live version needs a VR headset and paid AI services."
 press:
   - title: "Didattica interattiva: al Duca degli Abruzzi si studia nel metaverso"
     source: "Antenna Tre"

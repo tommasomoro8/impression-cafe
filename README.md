@@ -20,7 +20,7 @@ A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a questi
 ## Technical challenges
 - Waiting for the whole reply before turning it into speech was too slow, so I stream it and send each sentence to text-to-speech while the model is still writing.
 - The audio clips can come back in the wrong order, so each one is numbered and they are always played in sequence.
-- Each session has one live channel that feeds both the headset and any browser watching.
+- Each session has one socket channel that feeds both the headset and any browser watching.
 
 ## What I learned
 - Working in a team with a sharp split: the server was mine, Unity was Ivan's.
