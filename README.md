@@ -1,6 +1,6 @@
 # ImpressionCafé
 
-A VR reconstruction of the Café Guerbois where students talk to four Impressionist painters, each played by an AI chatbot.
+A VR reconstruction of the Café Guerbois where students can talk to four Impressionist painters, each played by an AI chatbot.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 ![Language](https://img.shields.io/badge/language-JavaScript-f7df1e)
@@ -12,15 +12,15 @@ A VR reconstruction of the Café Guerbois where students talk to four Impression
 
 <!-- portfolio:summary
 ## The problem
-My art history teacher asked for an interactive reconstruction of the Café Guerbois, where the Impressionist painters used to meet, so that students could talk with them instead of only reading about them. I teamed up again with Ivan Lomaka and, drawing on our Cappella degli Scrovegni 360° project, we brought together AI chatbots, VR headsets and art history to build it.
+My art history teacher asked for an interactive reconstruction of the Café Guerbois where students could talk with the Impressionist painters instead of only reading about them. I teamed up with [Ivan Lomaka](https://github.com/IvanLomaka) and, drawing on our [Cappella degli Scrovegni 360°](https://github.com/tommasomoro8/cappella-degli-scrovegni) project, we brought together AI chatbots, VR headsets and art history to build it.
 
 ## The solution
 A VR café with Monet, Renoir, Degas and Manet: you walk up to one, ask a question out loud and he answers by voice, in character. A web page follows every conversation live and, without a headset, works as a simple chat with the painters. I built the server and the web pages, Ivan built the VR client, Andrea Luca Bristot modelled the café.
 
 ## Technical challenges
 - Waiting for the whole reply before turning it into speech was too slow, so I stream it and send each sentence to text-to-speech while the model is still writing.
-- Speech clips can come back out of order, so each one carries an index and the clients play them in sequence.
-- One Socket.IO room per session feeds both the headset and any browser watching.
+- The audio clips can come back in the wrong order, so each one is numbered and they are always played in sequence.
+- Each session has one live channel that feeds both the headset and any browser watching.
 
 ## What I learned
 - Working in a team with a sharp split: the server was mine, Unity was Ivan's.
