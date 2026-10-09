@@ -1,4 +1,4 @@
-# ImpressionCafé
+# ImpressionCafé - VR & Conversational AI
 
 A VR reconstruction of the Café Guerbois where students can talk to four Impressionist painters, each played by an AI chatbot.
 
